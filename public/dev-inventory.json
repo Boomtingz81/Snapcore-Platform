@@ -1,0 +1,774 @@
+{
+  "scannedAt": "2025-08-10T14:45:52.922Z",
+  "totals": {
+    "pages": 57,
+    "components": 15,
+    "routes": 56,
+    "sizeKB": 350.29999999999995
+  },
+  "routes": [
+    {
+      "path": "/",
+      "element": "Home",
+      "file": "./pages/Home"
+    },
+    {
+      "path": "/about",
+      "element": "About",
+      "file": "./pages/About"
+    },
+    {
+      "path": "/contact",
+      "element": "Contact",
+      "file": "./pages/Contact"
+    },
+    {
+      "path": "/features",
+      "element": "Features",
+      "file": "./pages/Features"
+    },
+    {
+      "path": "/pricing",
+      "element": "Pricing",
+      "file": "./pages/Pricing"
+    },
+    {
+      "path": "/support",
+      "element": "Support",
+      "file": "./pages/Support"
+    },
+    {
+      "path": "/faq",
+      "element": "Faq",
+      "file": "./pages/Faq"
+    },
+    {
+      "path": "/terms",
+      "element": "Terms",
+      "file": "./pages/Terms"
+    },
+    {
+      "path": "/privacy-policy",
+      "element": "PrivacyPolicy",
+      "file": "./pages/PrivacyPolicy"
+    },
+    {
+      "path": "/login",
+      "element": "Login",
+      "file": "./pages/Login"
+    },
+    {
+      "path": "/signup",
+      "element": "Signup",
+      "file": "./pages/Signup"
+    },
+    {
+      "path": "/forgot-password",
+      "element": "ForgotPassword",
+      "file": "./pages/ForgotPassword"
+    },
+    {
+      "path": "/reset-password",
+      "element": "ResetPassword",
+      "file": "./pages/ResetPassword"
+    },
+    {
+      "path": "/verify-email",
+      "element": "VerifyEmail",
+      "file": "./pages/VerifyEmail"
+    },
+    {
+      "path": "/resend-verification",
+      "element": "ResendVerification",
+      "file": "./pages/ResendVerification"
+    },
+    {
+      "path": "/change-password",
+      "element": "ChangePassword",
+      "file": "./pages/ChangePassword"
+    },
+    {
+      "path": "/2fa",
+      "element": "TwoFactorSetup",
+      "file": "./pages/TwoFactorSetup"
+    },
+    {
+      "path": "/snaptech",
+      "element": "SnapTech",
+      "file": "./pages/SnapTech"
+    },
+    {
+      "path": "/pro",
+      "element": "SnapPro",
+      "file": "./pages/SnapPro"
+    },
+    {
+      "path": "/scan",
+      "element": "SnapScan",
+      "file": "./pages/SnapScan"
+    },
+    {
+      "path": "/history",
+      "element": "SnapHistory",
+      "file": "./pages/SnapHistory"
+    },
+    {
+      "path": "/vin",
+      "element": "VinDecoder",
+      "file": "./pages/VinDecoder"
+    },
+    {
+      "path": "/plate",
+      "element": "PlateScanner",
+      "file": "./pages/PlateScanner"
+    },
+    {
+      "path": "/snapdna",
+      "element": "SnapDNA",
+      "file": "./pages/SnapDNA"
+    },
+    {
+      "path": "/repairgpt",
+      "element": "RepairGPTMode",
+      "file": "./pages/RepairGPTMode"
+    },
+    {
+      "path": "/snapjob",
+      "element": "SnapJob",
+      "file": "./pages/SnapJob"
+    },
+    {
+      "path": "/snaptranslate",
+      "element": "SnapGlobalTranslate",
+      "file": "./pages/SnapGlobalTranslate"
+    },
+    {
+      "path": "/snapupdate",
+      "element": "SnapUpdateEngine",
+      "file": "./pages/SnapUpdateEngine"
+    },
+    {
+      "path": "/analytics",
+      "element": "SnapAnalyticsDashboard",
+      "file": "./pages/SnapAnalyticsDashboard"
+    },
+    {
+      "path": "/relaydebug",
+      "element": "SnapRelayDebugHub",
+      "file": "./pages/SnapRelayDebugHub"
+    },
+    {
+      "path": "/briefs",
+      "element": "SnapBriefs",
+      "file": "./pages/SnapBriefs"
+    },
+    {
+      "path": "/labtoolkit",
+      "element": "SnapLabToolkit",
+      "file": "./pages/SnapLabToolkit"
+    },
+    {
+      "path": "/license-manager",
+      "element": "SnapCoreLicenseManager",
+      "file": "./pages/SnapCoreLicenseManager"
+    },
+    {
+      "path": "/mot-reminders",
+      "element": "MOTReminderScheduler",
+      "file": "./pages/MOTReminderScheduler"
+    },
+    {
+      "path": "/garage-dashboard",
+      "element": "GarageAdminDashboard",
+      "file": "./pages/GarageAdminDashboard"
+    },
+    {
+      "path": "/garage",
+      "element": "GarageDashboard",
+      "file": "./pages/GarageDashboard"
+    },
+    {
+      "path": "/offline",
+      "element": "OfflineModeManager",
+      "file": "./pages/OfflineModeManager"
+    },
+    {
+      "path": "/restrictions",
+      "element": "AccessRestrictionHandler",
+      "file": "./pages/AccessRestrictionHandler"
+    },
+    {
+      "path": "/sentience",
+      "element": "SnapSentience",
+      "file": "./pages/SnapSentience"
+    },
+    {
+      "path": "/predict",
+      "element": "SnapPredict",
+      "file": "./pages/SnapPredict"
+    },
+    {
+      "path": "/recall",
+      "element": "SnapRecall",
+      "file": "./pages/SnapRecall"
+    },
+    {
+      "path": "/live",
+      "element": "SnapLive",
+      "file": "./pages/SnapLive"
+    },
+    {
+      "path": "/reset",
+      "element": "SnapReset",
+      "file": "./pages/SnapReset"
+    },
+    {
+      "path": "/bulletin",
+      "element": "SnapBulletin",
+      "file": "./pages/SnapBulletin"
+    },
+    {
+      "path": "/notes",
+      "element": "SnapNotes",
+      "file": "./pages/SnapNotes"
+    },
+    {
+      "path": "/metrics",
+      "element": "SnapMetric",
+      "file": "./pages/SnapMetric"
+    },
+    {
+      "path": "/secure",
+      "element": "SnapSecure",
+      "file": "./pages/SnapSecure"
+    },
+    {
+      "path": "/gptui",
+      "element": "SnapChatGPTUI",
+      "file": "./pages/SnapChatGPTUI"
+    },
+    {
+      "path": "/terminal",
+      "element": "SnapTerminal",
+      "file": "./pages/SnapTerminal"
+    },
+    {
+      "path": "/track",
+      "element": "SnapTrack",
+      "file": "./pages/SnapTrack"
+    },
+    {
+      "path": "/replay",
+      "element": "SnapReplay",
+      "file": "./pages/SnapReplay"
+    },
+    {
+      "path": "/sign",
+      "element": "SnapSign",
+      "file": "./pages/SnapSign"
+    },
+    {
+      "path": "/lab",
+      "element": "SnapLab",
+      "file": "./pages/SnapLab"
+    },
+    {
+      "path": "/vehicle-lookup",
+      "element": "VehicleLookup",
+      "file": "./pages/VehicleLookup"
+    },
+    {
+      "path": "/snaptech-chat",
+      "element": "SnapTechChat",
+      "file": "./pages/SnapTechChat"
+    },
+    {
+      "path": "*",
+      "element": "NotFound",
+      "file": "./pages/NotFound"
+    }
+  ],
+  "pages": [
+    {
+      "file": "src/pages/About/index.jsx",
+      "bytes": 8844,
+      "kb": 8.6
+    },
+    {
+      "file": "src/pages/AccessRestrictionHandler/index.jsx",
+      "bytes": 1362,
+      "kb": 1.3
+    },
+    {
+      "file": "src/pages/ChangePassword/index.jsx",
+      "bytes": 7393,
+      "kb": 7.2
+    },
+    {
+      "file": "src/pages/Contact/index.jsx",
+      "bytes": 8844,
+      "kb": 8.6
+    },
+    {
+      "file": "src/pages/DiagnosticDashboard.jsx",
+      "bytes": 9285,
+      "kb": 9.1
+    },
+    {
+      "file": "src/pages/Faq/index.jsx",
+      "bytes": 8580,
+      "kb": 8.4
+    },
+    {
+      "file": "src/pages/Features/index.jsx",
+      "bytes": 5866,
+      "kb": 5.7
+    },
+    {
+      "file": "src/pages/ForgotPassword/index.jsx",
+      "bytes": 5074,
+      "kb": 5
+    },
+    {
+      "file": "src/pages/GarageAdminDashboard/index.jsx",
+      "bytes": 3923,
+      "kb": 3.8
+    },
+    {
+      "file": "src/pages/GarageDashboard.jsx",
+      "bytes": 8829,
+      "kb": 8.6
+    },
+    {
+      "file": "src/pages/Home/index.jsx",
+      "bytes": 5419,
+      "kb": 5.3
+    },
+    {
+      "file": "src/pages/Login/index.jsx",
+      "bytes": 7951,
+      "kb": 7.8
+    },
+    {
+      "file": "src/pages/MOTReminderScheduler/index.jsx",
+      "bytes": 4634,
+      "kb": 4.5
+    },
+    {
+      "file": "src/pages/NotFound/index.jsx",
+      "bytes": 3670,
+      "kb": 3.6
+    },
+    {
+      "file": "src/pages/OfflineModeManager/index.jsx",
+      "bytes": 3423,
+      "kb": 3.3
+    },
+    {
+      "file": "src/pages/PlateScanner/index.jsx",
+      "bytes": 6780,
+      "kb": 6.6
+    },
+    {
+      "file": "src/pages/Pricing/index.jsx",
+      "bytes": 6076,
+      "kb": 5.9
+    },
+    {
+      "file": "src/pages/PrivacyPolicy/index.jsx",
+      "bytes": 5345,
+      "kb": 5.2
+    },
+    {
+      "file": "src/pages/RepairGPTMode/index.jsx",
+      "bytes": 4331,
+      "kb": 4.2
+    },
+    {
+      "file": "src/pages/ResendVerification/index.jsx",
+      "bytes": 6614,
+      "kb": 6.5
+    },
+    {
+      "file": "src/pages/ResetPassword/index.jsx",
+      "bytes": 5996,
+      "kb": 5.9
+    },
+    {
+      "file": "src/pages/Signup/index.jsx",
+      "bytes": 5490,
+      "kb": 5.4
+    },
+    {
+      "file": "src/pages/SnapAnalyticsDashboard/index.jsx",
+      "bytes": 3946,
+      "kb": 3.9
+    },
+    {
+      "file": "src/pages/SnapBriefs/index.jsx",
+      "bytes": 3478,
+      "kb": 3.4
+    },
+    {
+      "file": "src/pages/SnapBulletin/index.jsx",
+      "bytes": 4416,
+      "kb": 4.3
+    },
+    {
+      "file": "src/pages/SnapChatGPTUI/index.jsx",
+      "bytes": 4359,
+      "kb": 4.3
+    },
+    {
+      "file": "src/pages/SnapCoreLicenseManager/index.jsx",
+      "bytes": 5234,
+      "kb": 5.1
+    },
+    {
+      "file": "src/pages/SnapDNA/index.jsx",
+      "bytes": 5025,
+      "kb": 4.9
+    },
+    {
+      "file": "src/pages/SnapGlobalTranslate/index.jsx",
+      "bytes": 4870,
+      "kb": 4.8
+    },
+    {
+      "file": "src/pages/SnapHistory/index.jsx",
+      "bytes": 3164,
+      "kb": 3.1
+    },
+    {
+      "file": "src/pages/SnapJob/index.jsx",
+      "bytes": 5169,
+      "kb": 5
+    },
+    {
+      "file": "src/pages/SnapLab/index.jsx",
+      "bytes": 7612,
+      "kb": 7.4
+    },
+    {
+      "file": "src/pages/SnapLabToolKit/index.jsx",
+      "bytes": 3797,
+      "kb": 3.7
+    },
+    {
+      "file": "src/pages/SnapLive/index.jsx",
+      "bytes": 4747,
+      "kb": 4.6
+    },
+    {
+      "file": "src/pages/SnapMetric/index.jsx",
+      "bytes": 4605,
+      "kb": 4.5
+    },
+    {
+      "file": "src/pages/SnapNotes/index.jsx",
+      "bytes": 7551,
+      "kb": 7.4
+    },
+    {
+      "file": "src/pages/SnapPredict/index.jsx",
+      "bytes": 5474,
+      "kb": 5.3
+    },
+    {
+      "file": "src/pages/SnapPro/index.jsx",
+      "bytes": 1750,
+      "kb": 1.7
+    },
+    {
+      "file": "src/pages/SnapRecall/index.jsx",
+      "bytes": 4273,
+      "kb": 4.2
+    },
+    {
+      "file": "src/pages/SnapRelayDebugHub/index.jsx",
+      "bytes": 4275,
+      "kb": 4.2
+    },
+    {
+      "file": "src/pages/SnapReplay/index.jsx",
+      "bytes": 5513,
+      "kb": 5.4
+    },
+    {
+      "file": "src/pages/SnapReset/index.jsx",
+      "bytes": 5409,
+      "kb": 5.3
+    },
+    {
+      "file": "src/pages/SnapScan/index.jsx",
+      "bytes": 6695,
+      "kb": 6.5
+    },
+    {
+      "file": "src/pages/SnapSecure/index.jsx",
+      "bytes": 5897,
+      "kb": 5.8
+    },
+    {
+      "file": "src/pages/SnapSentience/index.jsx",
+      "bytes": 4154,
+      "kb": 4.1
+    },
+    {
+      "file": "src/pages/SnapSign/index.jsx",
+      "bytes": 6573,
+      "kb": 6.4
+    },
+    {
+      "file": "src/pages/SnapTech/index.jsx",
+      "bytes": 6766,
+      "kb": 6.6
+    },
+    {
+      "file": "src/pages/SnapTechChat.jsx",
+      "bytes": 3799,
+      "kb": 3.7
+    },
+    {
+      "file": "src/pages/SnapTerminal/index.jsx",
+      "bytes": 6011,
+      "kb": 5.9
+    },
+    {
+      "file": "src/pages/SnapTrack/index.jsx",
+      "bytes": 5619,
+      "kb": 5.5
+    },
+    {
+      "file": "src/pages/SnapUpdateEngine/index.jsx",
+      "bytes": 3881,
+      "kb": 3.8
+    },
+    {
+      "file": "src/pages/Support/index.jsx",
+      "bytes": 4079,
+      "kb": 4
+    },
+    {
+      "file": "src/pages/Terms/index.jsx",
+      "bytes": 7066,
+      "kb": 6.9
+    },
+    {
+      "file": "src/pages/TwoFactorSetup/index.jsx",
+      "bytes": 6212,
+      "kb": 6.1
+    },
+    {
+      "file": "src/pages/VehicleLookup.jsx",
+      "bytes": 2799,
+      "kb": 2.7
+    },
+    {
+      "file": "src/pages/VerifyEmail/index.jsx",
+      "bytes": 5510,
+      "kb": 5.4
+    },
+    {
+      "file": "src/pages/VinDecoder/index.jsx",
+      "bytes": 7930,
+      "kb": 7.7
+    }
+  ],
+  "components": [
+    {
+      "file": "src/components/Buttons/Button.jsx",
+      "bytes": 4558,
+      "kb": 4.5
+    },
+    {
+      "file": "src/components/Buttons/ButtonGroup.jsx",
+      "bytes": 2598,
+      "kb": 2.5
+    },
+    {
+      "file": "src/components/Buttons/ButtonStyles.js",
+      "bytes": 1423,
+      "kb": 1.4
+    },
+    {
+      "file": "src/components/Buttons/FancyButton.jsx",
+      "bytes": 4971,
+      "kb": 4.9
+    },
+    {
+      "file": "src/components/Buttons/Index.js",
+      "bytes": 262,
+      "kb": 0.3
+    },
+    {
+      "file": "src/components/Card.jsx",
+      "bytes": 834,
+      "kb": 0.8
+    },
+    {
+      "file": "src/components/FloatingHeader.jsx",
+      "bytes": 4776,
+      "kb": 4.7
+    },
+    {
+      "file": "src/components/Footer.jsx",
+      "bytes": 5897,
+      "kb": 5.8
+    },
+    {
+      "file": "src/components/Header.jsx",
+      "bytes": 4533,
+      "kb": 4.4
+    },
+    {
+      "file": "src/components/Input.jsx",
+      "bytes": 1694,
+      "kb": 1.7
+    },
+    {
+      "file": "src/components/Layout.jsx",
+      "bytes": 2827,
+      "kb": 2.8
+    },
+    {
+      "file": "src/components/Modal.jsx",
+      "bytes": 1378,
+      "kb": 1.3
+    },
+    {
+      "file": "src/components/ReadingCard.jsx",
+      "bytes": 2694,
+      "kb": 2.6
+    },
+    {
+      "file": "src/components/RegistrationSearch.jsx",
+      "bytes": 2155,
+      "kb": 2.1
+    },
+    {
+      "file": "src/components/SnapTechChatWidget.jsx",
+      "bytes": 6595,
+      "kb": 6.4
+    }
+  ],
+  "warnings": {
+    "duplicatePages": [
+      {
+        "base": "index",
+        "files": [
+          "src/pages/About/index.jsx",
+          "src/pages/AccessRestrictionHandler/index.jsx",
+          "src/pages/ChangePassword/index.jsx",
+          "src/pages/Contact/index.jsx",
+          "src/pages/Faq/index.jsx",
+          "src/pages/Features/index.jsx",
+          "src/pages/ForgotPassword/index.jsx",
+          "src/pages/GarageAdminDashboard/index.jsx",
+          "src/pages/Home/index.jsx",
+          "src/pages/Login/index.jsx",
+          "src/pages/MOTReminderScheduler/index.jsx",
+          "src/pages/NotFound/index.jsx",
+          "src/pages/OfflineModeManager/index.jsx",
+          "src/pages/PlateScanner/index.jsx",
+          "src/pages/Pricing/index.jsx",
+          "src/pages/PrivacyPolicy/index.jsx",
+          "src/pages/RepairGPTMode/index.jsx",
+          "src/pages/ResendVerification/index.jsx",
+          "src/pages/ResetPassword/index.jsx",
+          "src/pages/Signup/index.jsx",
+          "src/pages/SnapAnalyticsDashboard/index.jsx",
+          "src/pages/SnapBriefs/index.jsx",
+          "src/pages/SnapBulletin/index.jsx",
+          "src/pages/SnapChatGPTUI/index.jsx",
+          "src/pages/SnapCoreLicenseManager/index.jsx",
+          "src/pages/SnapDNA/index.jsx",
+          "src/pages/SnapGlobalTranslate/index.jsx",
+          "src/pages/SnapHistory/index.jsx",
+          "src/pages/SnapJob/index.jsx",
+          "src/pages/SnapLab/index.jsx",
+          "src/pages/SnapLabToolKit/index.jsx",
+          "src/pages/SnapLive/index.jsx",
+          "src/pages/SnapMetric/index.jsx",
+          "src/pages/SnapNotes/index.jsx",
+          "src/pages/SnapPredict/index.jsx",
+          "src/pages/SnapPro/index.jsx",
+          "src/pages/SnapRecall/index.jsx",
+          "src/pages/SnapRelayDebugHub/index.jsx",
+          "src/pages/SnapReplay/index.jsx",
+          "src/pages/SnapReset/index.jsx",
+          "src/pages/SnapScan/index.jsx",
+          "src/pages/SnapSecure/index.jsx",
+          "src/pages/SnapSentience/index.jsx",
+          "src/pages/SnapSign/index.jsx",
+          "src/pages/SnapTech/index.jsx",
+          "src/pages/SnapTerminal/index.jsx",
+          "src/pages/SnapTrack/index.jsx",
+          "src/pages/SnapUpdateEngine/index.jsx",
+          "src/pages/Support/index.jsx",
+          "src/pages/Terms/index.jsx",
+          "src/pages/TwoFactorSetup/index.jsx",
+          "src/pages/VerifyEmail/index.jsx",
+          "src/pages/VinDecoder/index.jsx"
+        ]
+      }
+    ],
+    "duplicateComponents": [],
+    "missingRoutes": [
+      "src/pages/About/index.jsx",
+      "src/pages/AccessRestrictionHandler/index.jsx",
+      "src/pages/ChangePassword/index.jsx",
+      "src/pages/Contact/index.jsx",
+      "src/pages/DiagnosticDashboard.jsx",
+      "src/pages/Faq/index.jsx",
+      "src/pages/Features/index.jsx",
+      "src/pages/ForgotPassword/index.jsx",
+      "src/pages/GarageAdminDashboard/index.jsx",
+      "src/pages/Home/index.jsx",
+      "src/pages/Login/index.jsx",
+      "src/pages/MOTReminderScheduler/index.jsx",
+      "src/pages/NotFound/index.jsx",
+      "src/pages/OfflineModeManager/index.jsx",
+      "src/pages/PlateScanner/index.jsx",
+      "src/pages/Pricing/index.jsx",
+      "src/pages/PrivacyPolicy/index.jsx",
+      "src/pages/RepairGPTMode/index.jsx",
+      "src/pages/ResendVerification/index.jsx",
+      "src/pages/ResetPassword/index.jsx",
+      "src/pages/Signup/index.jsx",
+      "src/pages/SnapAnalyticsDashboard/index.jsx",
+      "src/pages/SnapBriefs/index.jsx",
+      "src/pages/SnapBulletin/index.jsx",
+      "src/pages/SnapChatGPTUI/index.jsx",
+      "src/pages/SnapCoreLicenseManager/index.jsx",
+      "src/pages/SnapDNA/index.jsx",
+      "src/pages/SnapGlobalTranslate/index.jsx",
+      "src/pages/SnapHistory/index.jsx",
+      "src/pages/SnapJob/index.jsx",
+      "src/pages/SnapLab/index.jsx",
+      "src/pages/SnapLabToolKit/index.jsx",
+      "src/pages/SnapLive/index.jsx",
+      "src/pages/SnapMetric/index.jsx",
+      "src/pages/SnapNotes/index.jsx",
+      "src/pages/SnapPredict/index.jsx",
+      "src/pages/SnapPro/index.jsx",
+      "src/pages/SnapRecall/index.jsx",
+      "src/pages/SnapRelayDebugHub/index.jsx",
+      "src/pages/SnapReplay/index.jsx",
+      "src/pages/SnapReset/index.jsx",
+      "src/pages/SnapScan/index.jsx",
+      "src/pages/SnapSecure/index.jsx",
+      "src/pages/SnapSentience/index.jsx",
+      "src/pages/SnapSign/index.jsx",
+      "src/pages/SnapTech/index.jsx",
+      "src/pages/SnapTerminal/index.jsx",
+      "src/pages/SnapTrack/index.jsx",
+      "src/pages/SnapUpdateEngine/index.jsx",
+      "src/pages/Support/index.jsx",
+      "src/pages/Terms/index.jsx",
+      "src/pages/TwoFactorSetup/index.jsx",
+      "src/pages/VerifyEmail/index.jsx",
+      "src/pages/VinDecoder/index.jsx"
+    ]
+  }
+}

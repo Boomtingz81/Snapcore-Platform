@@ -1,0 +1,67 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20250813180818
+Username: DESKTOP-NV28UGE\user
+RunAs User: DESKTOP-NV28UGE\user
+Configuration Name: 
+Machine: DESKTOP-NV28UGE (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 4632
+PSVersion: 5.1.19041.6093
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.19041.6093
+BuildVersion: 10.0.19041.6093
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+📓 Logging to: C:\Users\user\snapcore-new\_fixlog_20250813_180818.txt
+
+🔧 Killing node/npm/code processes (if any)...
+📁 Working directory: C:\Users\user\snapcore-new
+
+🛡️ Fixing ownership/permissions...
+
+🧹 Removing node_modules and package-lock.json (if they exist)...
+
+🧰 Cleaning npm cache & normalizing registry...
+npm warn using --force Recommended protections disabled.
+
+npm error `scripts-prepend-node-path` is not a valid npm option
+npm error A complete log of this run can be found in: C:\npm-cache\_logs\2025-08-13T17_10_38_113Z-debug-0.log
+
+🐍 Checking Python path for node-gyp...
+npm error `python` is not a valid npm option
+npm error A complete log of this run can be found in: C:\npm-cache\_logs\2025-08-13T17_10_39_151Z-debug-0.log
+✅ npm python set to: C:\Users\user\AppData\Local\Programs\Python\Python311\python.exe
+
+🔎 Environment check:
+where node ->
+C:\Program Files\nodejs\node.exe
+where npm ->
+C:\Program Files\nodejs\npm
+C:\Program Files\nodejs\npm.cmd
+npm --version ->
+npm --version -> 10.9.3
+python --version ->
+python --version -> Python 3.11.9
+npm config get python ->
+npm config get python -> undefined
+
+📦 Running: npm install --no-optional --legacy-peer-deps
+npm warn config optional Use `--omit=optional` to exclude optional dependencies, or
+npm warn config `--include=optional` to include them.
+npm warn config
+npm warn config       Default value does install optional deps unless otherwise omitted.
+Unknown command: "pm"
+
+To see a list of supported npm commands, run:
+  npm help
+
+❌ ERROR: npm install failed with exit code 1.
+See full details in: C:\Users\user\snapcore-new\_fixlog_20250813_180818.txt
+**********************
+Windows PowerShell transcript end
+End time: 20250813181040
+**********************

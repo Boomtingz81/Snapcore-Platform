@@ -1,0 +1,31 @@
+/* FILE: /src/styles/snapcore-future.css
+   SNAPCORE FUTURISTIC THEME (2024) - Zero-White, Perf-Optimized */
+:root{
+  --bg-0:#000;--bg-1:#06080f;--bg-2:#0b1220;--text:#e4e7ee;--acc:#00f0ff;
+  --glass:rgba(255,255,255,.05);--glow:0 0 10px rgba(0,240,255,.3)
+}
+html.future-ui{color-scheme:dark;background:var(--bg-0);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+html.future-ui,html.future-ui body,html.future-ui #root{min-height:100dvh;margin:0}
+html.future-ui::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.07;
+  background:
+    url("/assets/ui/noise-512.png") repeat,
+    radial-gradient(1200px 800px at 50% -10%, var(--bg-2) 0%, var(--bg-1) 45%, var(--bg-0) 100%);
+  background-size:clamp(256px,50vw,512px) clamp(256px,50vh,512px),cover}
+@media (prefers-reduced-motion:reduce){html.future-ui::before{background-attachment:fixed}}
+/* Glass + Holographic helpers */
+.glass{background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.1);border-radius:12px;transition:backdrop-filter .3s ease,-webkit-backdrop-filter .3s ease,box-shadow .2s ease;will-change:backdrop-filter,transform,opacity}
+.glass:hover{box-shadow:var(--glow)}
+.holo-border{position:relative}
+.holo-border::before{content:"";position:absolute;inset:-1px;border-radius:inherit;z-index:-1;
+  background:conic-gradient(from 180deg at 50% 50%, #00f0ff33, #00ffc833, #00f0ff33);
+  filter:blur(6px) saturate(1.2)}
+@media (max-width:768px){.holo-border::before{filter:blur(4px) saturate(1.2)}}
+/* Zero-white safety: kill accidental backgrounds */
+html.future-ui body,html.future-ui #root,.third-party-container{background-color:transparent !important}
+/* Scrollbars */
+html.future-ui{scrollbar-color:rgba(0,240,255,.35) rgba(255,255,255,.03)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:linear-gradient(#0d1b2a,#11253b);border-radius:10px}
+::-webkit-scrollbar-track{background:transparent}

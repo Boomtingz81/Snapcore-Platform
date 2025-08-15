@@ -1,0 +1,97 @@
+import React from "react";
+import PropTypes from "prop-types";
+import { motion } from "framer-motion";
+import clsx from "clsx";
+import Button from "./Button";
+
+export default function ButtonToolbar({
+  buttons = [],
+  layout = "auto", // auto | row | col
+  align = "center", // start | center | end
+  justify = "center", // start | center | end | between
+  gap = "md", // sm | md | lg
+  animation = true,
+  stagger = 0.08,
+}) {
+  const gapClasses = {
+    sm: "gap-2",
+    md: "gap-4",
+    lg: "gap-6",
+  };
+
+  const alignClasses = {
+    start: "items-start",
+    center: "items-center",
+    end: "items-end",
+  };
+
+  const justifyClasses = {
+    start: "justify-start",
+    center: "justify-center",
+    end: "justify-end",
+    between: "justify-between",
+  };
+
+  // ✅ Motion Variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { staggerChildren: stagger, duration: 0.4 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 },
+  };
+
+  return (
+    <motion.div
+      className={clsx(
+        "flex flex-wrap w-full",
+        layout === "auto"
+          ? "flex-col sm:flex-row"
+          : layout === "row"
+          ? "flex-row"
+          : "flex-col",
+        gapClasses[gap],
+        alignClasses[align],
+        justifyClasses[justify]
+      )}
+      variants={animation ? containerVariants : {}}
+      initial={animation ? "hidden" : false}
+      animate={animation ? "visible" : false}
+    >
+      {buttons.map((btn, i) => (
+        <motion.div key={i} variants={animation ? itemVariants : {}}>
+          <Button {...btn}>{btn.label}</Button>
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
+
+ButtonToolbar.propTypes = {
+  buttons: PropTypes.arrayOf(
+    PropTypes.shape({
+      label: PropTypes.string.isRequired,
+      onClick: PropTypes.func,
+      variant: PropTypes.string,
+      size: PropTypes.string,
+      fullWidth: PropTypes.bool,
+      icon: PropTypes.node,
+      iconPosition: PropTypes.oneOf(["left", "right"]),
+      loading: PropTypes.bool,
+      disabled: PropTypes.bool,
+      badge: PropTypes.string,
+    })
+  ),
+  layout: PropTypes.oneOf(["auto", "row", "col"]),
+  align: PropTypes.oneOf(["start", "center", "end"]),
+  justify: PropTypes.oneOf(["start", "center", "end", "between"]),
+  gap: PropTypes.oneOf(["sm", "md", "lg"]),
+  animation: PropTypes.bool,
+  stagger: PropTypes.number,
+};
