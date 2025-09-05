@@ -1,0 +1,514 @@
+name: Quality Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - "**/*.md"
+      - "**/*.MD"
+      - "**/*.png"
+      - "**/*.jpg"
+      - "**/*.jpeg"
+      - "**/*.gif"
+      - "**/*.svg"
+  workflow_dispatch:
+
+concurrency:
+  group: quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "18"
+  PYTHON_VERSION: "3.11"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  quality:
+    name: Integration Analysis + Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Detect package manager
+        id: pm
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            echo "manager=pnpm" >> $GITHUB_OUTPUT
+          elif [ -f yarn.lock ]; then
+            echo "manager=yarn" >> $GITHUB_OUTPUT
+          else
+            echo "manager=npm" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup pnpm if needed
+        if: steps.pm.outputs.manager == 'pnpm'
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: Install deps
+        run: |
+          if [ "${{ steps.pm.outputs.manager }}" = "pnpm" ]; then
+            pnpm install --frozen-lockfile || pnpm install
+          elif [ "${{ steps.pm.outputs.manager }}" = "yarn" ]; then
+            corepack enable
+            yarn install --immutable || yarn install
+          else
+            if [ -f package-lock.json ]; then
+              npm ci || npm i
+            else
+              npm i
+            fi
+          fi
+
+      - name: Install analysis tools
+        run: |
+          npm install -g dependency-cruiser madge
+          pip install --upgrade pip
+          pip install bandit pyflakes
+
+      # --- Security Audits ---
+      - name: Security audit (dependencies)
+        continue-on-error: true
+        run: |
+          if [ "${{ steps.pm.outputs.manager }}" = "pnpm" ]; then
+            pnpm audit --audit-level=moderate || true
+          elif [ "${{ steps.pm.outputs.manager }}" = "yarn" ]; then
+            yarn npm audit --audit-level moderate || true
+          else
+            npm audit --audit-level=moderate || true
+          fi
+
+      - name: Python security scan
+        continue-on-error: true
+        run: |
+          if find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" | head -1 | grep -q ".py"; then
+            bandit -r . -f json -o bandit-report.json || true
+            if [ -f bandit-report.json ]; then
+              echo "## Python Security Scan" >> $GITHUB_STEP_SUMMARY
+              cat bandit-report.json | jq -r '.results[] | "⚠️ " + .test_name + ": " + .issue_text' >> $GITHUB_STEP_SUMMARY || true
+            fi
+          fi
+
+      # --- Diagnostic App Integration Analysis ---
+      - name: Analyze component dependencies
+        continue-on-error: true
+        run: |
+          cat > .dependency-cruiser.js <<'EOF'
+          module.exports = {
+            forbidden: [
+              {
+                name: 'no-circular',
+                severity: 'error',
+                from: {},
+                to: { circular: true }
+              },
+              {
+                name: 'diagnostic-session-isolation',
+                severity: 'warn',
+                comment: 'DiagnosticSession should not directly import from lib/scans',
+                from: { path: 'src/pages/DiagnosticSession\\.jsx$' },
+                to: { path: 'src/lib/scans\\.' }
+              },
+              {
+                name: 'offline-queue-integrity',
+                severity: 'error', 
+                comment: 'Offline queue should not import from components',
+                from: { path: 'src/lib/offlineQueue\\.' },
+                to: { path: 'src/(pages|components)/' }
+              },
+              {
+                name: 'health-score-purity',
+                severity: 'warn',
+                comment: 'Health score should be pure - no side effects',
+                from: { path: 'src/utils/healthScore\\.' },
+                to: { path: 'src/(lib|api)/' }
+              }
+            ],
+            options: {
+              doNotFollow: { path: 'node_modules' },
+              includeOnly: { path: '^src/' },
+              tsPreCompilationDeps: true,
+              enhancedResolveOptions: { exportsFields: ['exports'] }
+            }
+          };
+          EOF
+
+          npx depcruise --validate .dependency-cruiser.js src/ > deps-report.txt 2>&1 || true
+          npx madge --image deps-graph.svg --exclude node_modules src/ || true
+
+          echo "## Dependency Analysis" >> $GITHUB_STEP_SUMMARY
+          if grep -q "error\|warn" deps-report.txt; then
+            echo "**Issues found:**" >> $GITHUB_STEP_SUMMARY
+            grep "error\|warn" deps-report.txt | head -10 >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No dependency issues detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Validate Python-React bridge contracts
+        continue-on-error: true
+        run: |
+          cat > validate-contracts.py <<'EOF'
+          import re
+          from pathlib import Path
+
+          def find_api_endpoints():
+              endpoints = {}
+              for py_file in Path('.').rglob('*.py'):
+                  if 'venv' in str(py_file) or '.venv' in str(py_file):
+                      continue
+                  try:
+                      content = py_file.read_text(encoding='utf-8')
+                      # Flask routes
+                      routes = re.findall(r'@app\.route\([\'"]([^\'"]+)[\'"].*?\)\s*def\s+(\w+)', content)
+                      # FastAPI routes
+                      routes += re.findall(r'@\w+\.(get|post|put|delete)\([\'"]([^\'"]+)[\'"].*?\)\s*async\s+def\s+(\w+)', content)
+                      for route_info in routes:
+                          if len(route_info) == 2:
+                              path, func_name = route_info
+                              endpoints[path] = {'file': str(py_file), 'function': func_name}
+                          elif len(route_info) == 3:
+                              method, path, func_name = route_info
+                              endpoints[f"{method.upper()} {path}"] = {'file': str(py_file), 'function': func_name}
+                  except Exception as e:
+                      print(f"Error parsing {py_file}: {e}")
+              return endpoints
+
+def find_frontend_api_calls():
+              api_calls = []
+              for js_file in Path('src').rglob('*.{js,jsx,ts,tsx}'):
+                  try:
+                      content = js_file.read_text(encoding='utf-8')
+                      # Find API calls to backend
+                      fetch_calls = re.findall(r'fetch\([\'"`]([^\'"`;]+)[\'"`]', content)
+                      axios_calls = re.findall(r'axios\.\w+\([\'"`]([^\'"`;]+)[\'"`]', content)
+                      for call in fetch_calls + axios_calls:
+                          if call.startswith('/'):
+                              api_calls.append({'path': call, 'file': str(js_file)})
+                  except Exception as e:
+                      print(f"Error parsing {js_file}: {e}")
+              return api_calls
+
+          print("## API Contract Analysis")
+          backend_endpoints = find_api_endpoints()
+          frontend_calls = find_frontend_api_calls()
+          
+          backend_paths = set(backend_endpoints.keys())
+          frontend_paths = set(call['path'] for call in frontend_calls)
+          
+          issues = []
+          orphaned_backend = backend_paths - frontend_paths
+          orphaned_frontend = frontend_paths - backend_paths
+          
+          if orphaned_backend:
+              issues.append(f"🔸 Unused backend endpoints: {', '.join(list(orphaned_backend)[:5])}")
+          if orphaned_frontend:
+              issues.append(f"🔸 Unmatched frontend calls: {', '.join(list(orphaned_frontend)[:5])}")
+          
+          # Check for required diagnostic endpoints
+          required_endpoints = ['/health', '/faults', '/live']
+          missing_required = [ep for ep in required_endpoints if not any(ep in path for path in backend_paths)]
+          if missing_required:
+              issues.append(f"🔸 Missing diagnostic endpoints: {', '.join(missing_required)}")
+          
+          if issues:
+              for issue in issues:
+                  print(issue)
+          else:
+              print("✅ API contracts look consistent")
+          EOF
+
+          python validate-contracts.py >> $GITHUB_STEP_SUMMARY
+
+      - name: Analyze React hook dependencies
+        continue-on-error: true
+        run: |
+          cat > analyze-hooks.js <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          function findJSXFiles(dir) {
+            const files = [];
+            try {
+              const items = fs.readdirSync(dir);
+              for (const item of items) {
+                const fullPath = path.join(dir, item);
+                const stat = fs.statSync(fullPath);
+                if (stat.isDirectory() && item !== 'node_modules') {
+                  files.push(...findJSXFiles(fullPath));
+                } else if (item.match(/\.(jsx?|tsx?)$/)) {
+                  files.push(fullPath);
+                }
+              }
+            } catch (e) {
+              // Directory doesn't exist
+            }
+            return files;
+          }
+
+          function analyzeHookDependencies(content, filename) {
+            const issues = [];
+            const hookRegex = /use(Effect|Memo|Callback)\s*\(\s*([^,]+),\s*\[([^\]]*)\]/g;
+            let match;
+            
+            while ((match = hookRegex.exec(content)) !== null) {
+              const [, hookType, callbackCode, depsArray] = match;
+              
+              const usedVars = new Set();
+              const varRegex = /\b[a-zA-Z_$][a-zA-Z0-9_$]*\b/g;
+              let varMatch;
+              
+              while ((varMatch = varRegex.exec(callbackCode)) !== null) {
+                const varName = varMatch[0];
+                if (!['const', 'let', 'var', 'function', 'return', 'if', 'else', 'Date', 'Math', 'console', 'window', 'document'].includes(varName)) {
+                  usedVars.add(varName);
+                }
+              }
+              
+              const declaredDeps = new Set();
+              if (depsArray.trim()) {
+                depsArray.split(',').forEach(dep => {
+                  const trimmed = dep.trim().replace(/['"]/g, '');
+                  if (trimmed) declaredDeps.add(trimmed);
+                });
+              }
+              
+              // Check for diagnostic-specific dependencies
+              const diagnosticVars = ['entries', 'health', 'socket', 'obdData', 'filters', 'obdSocket'];
+              const missingDiagnosticDeps = diagnosticVars.filter(v => 
+                usedVars.has(v) && !declaredDeps.has(v)
+              );
+              
+              if (missingDiagnosticDeps.length > 0) {
+                issues.push(`${filename}: ${hookType} missing deps: ${missingDiagnosticDeps.join(', ')}`);
+              }
+            }
+            return issues;
+          }
+
+          console.log('\n## React Hook Dependencies');
+          const srcFiles = findJSXFiles('src');
+          const allIssues = [];
+          
+          for (const file of srcFiles) {
+            try {
+              const content = fs.readFileSync(file, 'utf8');
+              const issues = analyzeHookDependencies(content, file);
+              allIssues.push(...issues);
+            } catch (error) {
+              // Skip files that can't be read
+            }
+          }
+          
+          if (allIssues.length > 0) {
+            console.log('**Potential missing dependencies:**');
+            allIssues.slice(0, 10).forEach(issue => console.log(`- ${issue}`));
+          } else {
+            console.log('✅ No obvious hook dependency issues found');
+          }
+          EOF
+
+          node analyze-hooks.js >> $GITHUB_STEP_SUMMARY
+
+      - name: Validate diagnostic data flow patterns
+        continue-on-error: true
+        run: |
+          cat > analyze-dataflow.js <<'EOF'
+          const fs = require('fs');
+
+          function analyzeDataFlow() {
+            const issues = [];
+            
+            // Check DiagnosticSession.jsx integration
+            const diagSessionPath = 'src/pages/DiagnosticSession.jsx';
+            if (fs.existsSync(diagSessionPath)) {
+              const content = fs.readFileSync(diagSessionPath, 'utf8');
+              
+              if (!content.includes('useObdSocket') && !content.includes('obdSocket')) {
+                issues.push('DiagnosticSession: Missing OBD socket integration');
+              }
+              if (!content.includes('computeHealthScore') && !content.includes('healthScore')) {
+                issues.push('DiagnosticSession: Missing health score integration');
+              }
+              if (!content.includes('saveScan') && !content.includes('queueScan')) {
+                issues.push('DiagnosticSession: Missing offline persistence');
+              }
+              if (!content.includes('try') && !content.includes('catch')) {
+                issues.push('DiagnosticSession: Missing error handling');
+              }
+            }
+            
+            // Check health score utility
+            const healthScorePath = 'src/utils/healthScore.js';
+            if (fs.existsSync(healthScorePath)) {
+              const content = fs.readFileSync(healthScorePath, 'utf8');
+              if (!content.includes('score') || !content.includes('confidence')) {
+                issues.push('healthScore: Inconsistent return type structure');
+              }
+              if (!content.includes('Array.isArray') && !content.includes('length')) {
+                issues.push('healthScore: Missing input validation');
+              }
+            }
+            
+            // Check offline queue patterns
+            const queuePaths = ['src/lib/offlineQueue.ts', 'src/lib/offlineQueue.js'];
+            const queuePath = queuePaths.find(p => fs.existsSync(p));
+            if (queuePath) {
+              const content = fs.readFileSync(queuePath, 'utf8');
+              if (!content.includes('localStorage') && !content.includes('IndexedDB')) {
+                issues.push('offlineQueue: Missing persistent storage');
+              }
+              if (!content.includes('navigator.onLine') && !content.includes('online')) {
+                issues.push('offlineQueue: Missing online/offline detection');
+              }
+            }
+            
+            return issues;
+          }
+
+          console.log('\n## Data Flow Analysis');
+          const issues = analyzeDataFlow();
+          
+          if (issues.length > 0) {
+            console.log('**Integration issues found:**');
+            issues.forEach(issue => console.log(`- ${issue}`));
+          } else {
+            console.log('✅ Data flow patterns look good');
+          }
+          EOF
+
+          node analyze-dataflow.js >> $GITHUB_STEP_SUMMARY
+
+      # --- Standard Quality Checks ---
+      - name: Lint (ESLint)
+        continue-on-error: true
+        run: |
+          if npx --yes eslint -v >/dev/null 2>&1; then
+            npx --yes eslint . || echo "::warning::ESLint issues found"
+          fi
+
+      - name: Type check (TypeScript)
+        continue-on-error: true
+        run: |
+          if [ -f tsconfig.json ]; then
+            npx --yes tsc --noEmit || echo "::warning::TypeScript issues found"
+          fi
+
+      - name: Build
+        run: |
+          if npx --yes vite -v >/dev/null 2>&1 || [ -f vite.config.ts ] || [ -f vite.config.js ]; then
+            if [ "${{ steps.pm.outputs.manager }}" = "pnpm" ]; then pnpm run build
+            elif [ "${{ steps.pm.outputs.manager }}" = "yarn" ]; then yarn build
+            else npm run build
+            fi
+          fi
+
+      - name: Test
+        continue-on-error: true
+        run: |
+          if npx --yes vitest --version >/dev/null 2>&1; then
+            npx --yes vitest run --reporter=verbose || true
+          elif npx --yes jest --version >/dev/null 2>&1; then
+            npx --yes jest --ci || true
+          fi
+
+      - name: Coverage
+        continue-on-error: true
+        run: |
+          if npx --yes vitest --version >/dev/null 2>&1; then
+            npx --yes vitest run --coverage || true
+          elif npx --yes jest --version >/dev/null 2>&1; then
+            npx --yes jest --coverage || true
+          fi
+
+      - name: Enforce coverage thresholds
+        run: |
+          THRESH_GLOBAL=70
+          FILE=$(ls -1 coverage/**/coverage-summary.json 2>/dev/null | head -n1)
+          if [ -z "$FILE" ]; then
+            echo "No coverage summary found"; exit 0
+          fi
+          TOTAL=$(cat "$FILE" | jq '.total.statements.pct|floor' 2>/dev/null || echo 0)
+          echo "Coverage: ${TOTAL}%"
+          if [ "${TOTAL:-0}" -lt "$THRESH_GLOBAL" ]; then
+            echo "::error::Coverage ${TOTAL}% below threshold ${THRESH_GLOBAL}%"
+            exit 1
+          fi
+
+      - name: Bundle size check
+        run: |
+          if [ -d dist ]; then
+            BYTES=$(du -sb dist | awk '{print $1}')
+            KB=$((BYTES/1024))
+            echo "Bundle size: ${KB} KB"
+            MAX_KB=15000
+            if [ "$KB" -gt "$MAX_KB" ]; then
+              echo "::error::Bundle size ${KB} KB exceeds budget ${MAX_KB} KB"
+              exit 1
+            fi
+            echo "## Bundle Size: ${KB} KB" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Performance benchmark (healthScore)
+        env:
+          PERF_BUDGET_MS: "250"
+          PERF_RUNS: "20"
+          PERF_WARMUP: "5"
+        run: |
+          if [ -f .github/scripts/healthscore-bench.mjs ]; then
+            node .github/scripts/healthscore-bench.mjs
+          else
+            echo "Performance benchmark script not found, skipping"
+          fi
+
+      - name: Python lint
+        continue-on-error: true
+        run: |
+          if find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" | head -1 | grep -q ".py"; then
+            pip install flake8 >/dev/null 2>&1 || true
+            flake8 . || echo "::warning::Python linting issues found"
+          fi
+
+      - name: Accessibility smoke test
+        continue-on-error: true
+        run: |
+          if [ -d dist ]; then
+            npx -y http-server dist -p 4173 >/dev/null 2>&1 &
+            SRV_PID=$!
+            sleep 3
+            npx -y pa11y http://127.0.0.1:4173/ --threshold 5 || true
+            npx -y pa11y http://127.0.0.1:4173/diagnostics --threshold 5 || true
+            kill $SRV_PID || true
+          fi
+
+      - name: Upload analysis reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-reports
+          path: |
+            deps-report.txt
+            deps-graph.svg
+            bandit-report.json
+          if-no-files-found: ignore

@@ -1,0 +1,387 @@
+name: AI Suggest
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to analyze'
+        required: false
+        type: string
+      goal:
+        description: 'Specific goal for suggestions'
+        required: false
+        default: 'Suggest fixes for this PR'
+        type: string
+      model:
+        description: 'AI model to use'
+        required: false
+        default: 'gpt-4o-mini'
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  NODE_VERSION: "18"
+  OPENAI_MODEL: "gpt-4o-mini"
+  MAX_CONTEXT_CHARS: "120000"
+  MAX_AI_REVIEW_CHARS: "25000"
+  MIN_AI_LINES: "10"
+  SAFE_PATH_REGEX: '^(src/|\.github/|package\.json$|package-lock\.json$|pnpm-lock\.yaml$|yarn\.lock$|vite\.config\.(js|ts)$|tsconfig\.json$)'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  suggest:
+    if: >
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       (github.actor_association == 'MEMBER' || github.actor_association == 'OWNER' || github.actor_association == 'COLLABORATOR') &&
+       startsWith(github.event.comment.body, '/ai-suggest'))
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Parse command and extract parameters
+        id: cmd
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "goal=${{ github.event.inputs.goal }}" >> $GITHUB_OUTPUT
+            echo "pr=${{ github.event.inputs.pr_number }}" >> $GITHUB_OUTPUT
+            echo "model=${{ github.event.inputs.model }}" >> $GITHUB_OUTPUT
+          else
+            body='${{ github.event.comment.body }}'
+            
+            # Extract model override: /ai-suggest:model=gpt-4o Fix this
+            model_override="$(echo "$body" | sed -nE 's/.*\/ai-suggest:model=([^ ]+).*/\1/p')"
+            if [ -n "$model_override" ]; then
+              echo "model=$model_override" >> $GITHUB_OUTPUT
+              # Remove model parameter from goal
+              goal="$(echo "$body" | sed -E 's/\/ai-suggest:model=[^ ]+//; s/^ *//; s/ *$//')"
+            else
+              echo "model=${{ env.OPENAI_MODEL }}" >> $GITHUB_OUTPUT
+              goal="${body#*/ai-suggest}"
+              goal="$(echo "$goal" | sed 's/^ *//; s/ *$//')"
+            fi
+            
+            if [ -z "$goal" ] || [ "$goal" = "$body" ]; then
+              goal="Suggest fixes for this PR"
+            fi
+            
+            echo "goal=$goal" >> $GITHUB_OUTPUT
+            echo "pr=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'issue_comment' && format('refs/pull/{0}/head', github.event.issue.number) || '' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Get PR details
+        id: pr_info
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "${{ steps.cmd.outputs.pr }}" ]; then
+            PR_DATA=$(gh pr view ${{ steps.cmd.outputs.pr }} --json baseRefName,headRefName,title,body,number)
+            echo "base_ref=$(echo "$PR_DATA" | jq -r '.baseRefName')" >> $GITHUB_OUTPUT
+            echo "head_ref=$(echo "$PR_DATA" | jq -r '.headRefName')" >> $GITHUB_OUTPUT
+            echo "title=$(echo "$PR_DATA" | jq -r '.title')" >> $GITHUB_OUTPUT
+          else
+            echo "base_ref=main" >> $GITHUB_OUTPUT
+            echo "head_ref=HEAD" >> $GITHUB_OUTPUT
+            echo "title=Manual analysis" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate PR diff with security redaction
+        id: diff
+        env:
+          MAX_CONTEXT_CHARS: ${{ env.MAX_CONTEXT_CHARS }}
+        run: |
+          base_ref="${{ steps.pr_info.outputs.base_ref }}"
+          
+          # Determine base commit
+          if [ "$base_ref" != "HEAD" ]; then
+            base_sha=$(git rev-parse "origin/$base_ref" 2>/dev/null || git rev-parse "$base_ref" 2>/dev/null || git rev-parse HEAD~1)
+          else
+            base_sha=$(git rev-parse HEAD~1)
+          fi
+          
+          head_sha=$(git rev-parse HEAD)
+          
+          echo "Generating diff from $base_sha to $head_sha"
+          git diff --unified=3 --no-color "$base_sha...$head_sha" > pr.diff || true
+          
+          # Security redaction - remove potential secrets
+          cp pr.diff pr.diff.redacted
+          sed -i -E 's/(VITE_[A-Z0-9_]+|REACT_APP_[A-Z0-9_]+)=.*/\1=REDACTED/g' pr.diff.redacted
+          sed -i -E 's/(OPENAI_API_KEY|SUPABASE_[A-Z_]+|JWT_[A-Z_]+|DATABASE_URL|API_KEY|SECRET|TOKEN)=.*/\1=REDACTED/g' pr.diff.redacted
+          sed -i -E 's/(Bearer |Basic )[A-Za-z0-9+\/=]+/\1REDACTED/g' pr.diff.redacted
+          
+          # Truncate for API limits with character-safe truncation
+          python - <<'PY'
+          import os
+          mx = int(os.environ.get("MAX_CONTEXT_CHARS", "120000"))
+          try:
+              with open("pr.diff.redacted", "rb") as f:
+                  data = f.read()
+              txt = data.decode("utf-8", errors="ignore")[:mx]
+              with open("pr.diff.trunc", "w", encoding="utf-8") as f:
+                  f.write("###DIFF START###\n")
+                  f.write(txt)
+                  f.write("\n###DIFF END###\n")
+              lines = sum(1 for _ in open("pr.diff.trunc", "r", encoding="utf-8"))
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write(f"lines={lines}\n")
+          except Exception as e:
+              print(f"Error processing diff: {e}")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("lines=0\n")
+          PY
+
+      - name: Check diff size and skip if too small
+        id: sizegate
+        run: |
+          LINES=${{ steps.diff.outputs.lines }}
+          if [ "$LINES" -lt "${{ env.MIN_AI_LINES }}" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "## AI Suggestions Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "Diff too small for meaningful suggestions ($LINES lines)." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "## AI Analysis Started" >> $GITHUB_STEP_SUMMARY
+            echo "Analyzing $LINES lines of changes with model: ${{ steps.cmd.outputs.model }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Build safety filter for changed files
+        if: steps.sizegate.outputs.skip == 'false'
+        id: changed
+        env:
+          SAFE_PATH_REGEX: ${{ env.SAFE_PATH_REGEX }}
+        run: |
+          base_ref="${{ steps.pr_info.outputs.base_ref }}"
+          base_sha=$(git rev-parse "origin/$base_ref" 2>/dev/null || git rev-parse "$base_ref" 2>/dev/null || git rev-parse HEAD~1)
+          head_sha=$(git rev-parse HEAD)
+          
+          git diff --name-only "$base_sha...$head_sha" > changed.txt || true
+          echo "All changed files:" | tee -a $GITHUB_STEP_SUMMARY
+          cat changed.txt | tee -a $GITHUB_STEP_SUMMARY
+          
+          # Filter to safe paths only
+          awk 'match($0, /'"$SAFE_PATH_REGEX"'/)' changed.txt > safe_changed.txt || true
+          echo -e "\nSafe files for AI suggestions:" | tee -a $GITHUB_STEP_SUMMARY
+          cat safe_changed.txt | tee -a $GITHUB_STEP_SUMMARY
+
+      - name: Generate AI suggestions
+        if: steps.sizegate.outputs.skip == 'false'
+        id: ai
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MODEL: ${{ steps.cmd.outputs.model }}
+          GOAL: ${{ steps.cmd.outputs.goal }}
+          MAX_AI_REVIEW_CHARS: ${{ env.MAX_AI_REVIEW_CHARS }}
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::notice::No OPENAI_API_KEY secret set. Skipping AI suggestions."
+            echo "No API key available for AI suggestions." > suggestions.md
+            exit 0
+          fi
+
+          echo "::add-mask::$OPENAI_API_KEY"
+          
+          PROMPT=$(cat <<'EOF'
+You are a senior reviewer for a React/Vite diagnostic PWA (Tailwind; optional Three.js/R3F; Python bridge for OBD data).
+
+Provide:
+
+1) **Code Review**: Bullet-point analysis of real issues:
+   - Missing imports/exports, wrong paths, broken routes
+   - React hook dependency issues, misuse of hooks
+   - Build blockers, Vite/env configuration problems
+   - API contract mismatches between Python bridge and frontend
+   - Performance issues in real-time data processing
+
+2) **Diagnostic-Specific Patterns**: Watch for:
+   - DiagnosticSession.jsx integration issues (OBD socket, health score, offline queue)
+   - healthScore.js correctness (bands, penalties, contributors)
+   - Offline queue integrity (saveScan/flushQueuedScans edge cases)
+   - Python bridge error handling (/health, /faults, /live endpoints)
+   - Real-time data flow disruptions and WebSocket connection issues
+   - EV diagnostic data handling patterns
+
+3) **GitHub Suggestions**: Up to 6 suggestion blocks for specific fixes.
+   ONLY suggest changes to files listed in "SAFE FILES" section.
+   Use exact GitHub suggestion format:
+   ```suggestion
+   // replacement code here
+   ```
+
+Focus on integration issues and architectural problems. Keep suggestions concise and actionable.
+Never suggest changes to files outside the safe list.
+
+Stack context: React/Vite PWA for automotive diagnostics with Python OBD bridge, offline-first architecture, health scoring system, and real-time data visualization.
+EOF
+)
+
+          DIFF="$(cat pr.diff.trunc)"
+          SAFE_FILES="$(cat safe_changed.txt 2>/dev/null || echo 'No safe files identified')"
+          GOAL_TEXT="$GOAL"
+          
+          JSON=$(jq -n \
+            --arg model "$MODEL" \
+            --arg prompt "$PROMPT" \
+            --arg goal "$GOAL_TEXT" \
+            --arg diff "$DIFF" \
+            --arg safe_files "$SAFE_FILES" \
+            '{
+              "model": $model,
+              "messages": [
+                {
+                  "role": "system",
+                  "content": $prompt
+                },
+                {
+                  "role": "user", 
+                  "content": ("GOAL: " + $goal + "\n\nSAFE FILES:\n" + $safe_files + "\n\nDIFF:\n" + $diff)
+                }
+              ],
+              "temperature": 0.2
+            }')
+
+          # API call with retry logic
+          for attempt in 1 2 3; do
+            response=$(curl -sS -w "\n%{http_code}" \
+              https://api.openai.com/v1/chat/completions \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$JSON")
+            
+            status_code=$(echo "$response" | tail -1)
+            body=$(echo "$response" | sed '$d')
+            
+            if [ "$status_code" = "200" ]; then
+              echo "$body" > ai_response.json
+              break
+            else
+              echo "OpenAI API call failed (HTTP $status_code) on attempt $attempt" >&2
+              if [ $attempt -lt 3 ]; then
+                sleep $((attempt * attempt))
+              fi
+            fi
+          done
+
+          if [ ! -f ai_response.json ]; then
+            echo "AI suggestions unavailable after retries" > suggestions.md
+          else
+            content=$(jq -r '.choices[0].message.content // empty' ai_response.json)
+            if [ -z "$content" ]; then
+              echo "No suggestions generated" > suggestions.md
+            else
+              # Truncate to size limit
+              python - <<'PY'
+import os, json
+try:
+    cap = int(os.environ.get("MAX_AI_REVIEW_CHARS", "25000"))
+    with open("ai_response.json") as f:
+        data = json.load(f)
+    content = data["choices"][0]["message"]["content"]
+    truncated = content[:cap]
+    with open("suggestions.md", "w", encoding="utf-8") as f:
+        f.write(truncated)
+except Exception as e:
+    with open("suggestions.md", "w") as f:
+        f.write(f"Error processing AI response: {e}")
+PY
+            fi
+          fi
+
+          echo "suggestion_length=$(wc -c < suggestions.md 2>/dev/null || echo 0)" >> $GITHUB_OUTPUT
+
+      - name: Post AI suggestions to PR
+        if: steps.sizegate.outputs.skip == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.cmd.outputs.pr }}
+          MODEL: ${{ steps.cmd.outputs.model }}
+          GOAL: ${{ steps.cmd.outputs.goal }}
+        run: |
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR number available for posting comment"
+            exit 0
+          fi
+
+          # Create comment body
+          suggestions_content=$(cat suggestions.md)
+          comment_body=$(cat <<EOF
+### 🧠 AI Suggestions — $MODEL
+
+**Goal:** $GOAL
+
+$suggestions_content
+
+---
+*Generated from commit $(git rev-parse --short HEAD). Click the suggestion blocks above to apply specific fixes.*
+
+**Usage:** 
+- \`/ai-suggest\` - General suggestions
+- \`/ai-suggest:model=gpt-4o Fix WebSocket issues\` - Use specific model
+- \`/ai-suggest Fix performance problems\` - Targeted goal
+EOF
+)
+
+          # Check for existing AI suggestions comment
+          existing_comment_id=$(gh api \
+            "repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+            --jq '.[] | select(.body | startswith("### 🧠 AI Suggestions")) | .id' \
+            | head -1)
+
+          if [ -n "$existing_comment_id" ]; then
+            # Update existing comment
+            gh api \
+              "repos/${{ github.repository }}/issues/comments/$existing_comment_id" \
+              -X PATCH \
+              -f body="$comment_body" || true
+            echo "Updated existing AI suggestions comment #$existing_comment_id"
+          else
+            # Create new comment
+            gh api \
+              "repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+              -f body="$comment_body" || true
+            echo "Posted new AI suggestions comment"
+          fi
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## AI Suggestions Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Goal:** ${{ steps.cmd.outputs.goal }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Model:** ${{ steps.cmd.outputs.model }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR:** #${{ steps.cmd.outputs.pr }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Diff lines:** ${{ steps.diff.outputs.lines }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.sizegate.outputs.skip }}" = "true" ]; then
+            echo "- **Status:** Skipped (diff too small)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status:** Completed" >> $GITHUB_STEP_SUMMARY
+            echo "- **Response length:** ${{ steps.ai.outputs.suggestion_length || 0 }} chars" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f suggestions.md ] && [ "${{ steps.sizegate.outputs.skip }}" = "false" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Suggestions Preview:**" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -15 suggestions.md >> $GITHUB_STEP_SUMMARY || true
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
