@@ -4,24 +4,24 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:
-      - "**/*.md"
-      - "**/*.MD"
-      - "**/*.png"
-      - "**/*.jpg"
-      - "**/*.jpeg"
-      - "**/*.gif"
-      - "**/*.svg"
-  workflow_dispatch:
+      - '**/*.md'
+      - '**/*.MD'
+      - '**/*.png'
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.gif'
+      - '**/*.svg'
+  workflow_dispatch: {}
 
 concurrency:
-  group: quality-${{ github.event.pull_request.number || github.ref }}
+  group: "quality-${{ github.event.pull_request.number || github.ref }}"
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 env:
-  NODE_VERSION: "18"
+  NODE_VERSION: "20" # LTS; change to "18" if you need older
   PYTHON_VERSION: "3.11"
 
 defaults:
@@ -49,6 +49,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
 
       - name: Detect package manager
         id: pm
@@ -69,6 +70,7 @@ jobs:
 
       - name: Install deps
         run: |
+          set -e
           if [ "${{ steps.pm.outputs.manager }}" = "pnpm" ]; then
             pnpm install --frozen-lockfile || pnpm install
           elif [ "${{ steps.pm.outputs.manager }}" = "yarn" ]; then
@@ -84,11 +86,11 @@ jobs:
 
       - name: Install analysis tools
         run: |
-          npm install -g dependency-cruiser madge
+          npm i -g dependency-cruiser madge
           pip install --upgrade pip
-          pip install bandit pyflakes
+          pip install bandit pyflakes flake8
 
-      # --- Security Audits ---
+      # -------- Security ----------
       - name: Security audit (dependencies)
         continue-on-error: true
         run: |
@@ -111,19 +113,14 @@ jobs:
             fi
           fi
 
-      # --- Diagnostic App Integration Analysis ---
+      # ------ Dependency / Integration Diagnostics -------
       - name: Analyze component dependencies
         continue-on-error: true
         run: |
           cat > .dependency-cruiser.js <<'EOF'
           module.exports = {
             forbidden: [
-              {
-                name: 'no-circular',
-                severity: 'error',
-                from: {},
-                to: { circular: true }
-              },
+              { name: 'no-circular', severity: 'error', from: {}, to: { circular: true } },
               {
                 name: 'diagnostic-session-isolation',
                 severity: 'warn',
@@ -133,8 +130,8 @@ jobs:
               },
               {
                 name: 'offline-queue-integrity',
-                severity: 'error', 
-                comment: 'Offline queue should not import from components',
+                severity: 'error',
+                comment: 'Offline queue should not import from components/pages',
                 from: { path: 'src/lib/offlineQueue\\.' },
                 to: { path: 'src/(pages|components)/' }
               },
@@ -159,9 +156,9 @@ jobs:
           npx madge --image deps-graph.svg --exclude node_modules src/ || true
 
           echo "## Dependency Analysis" >> $GITHUB_STEP_SUMMARY
-          if grep -q "error\|warn" deps-report.txt; then
+          if grep -Eiq "error|warn" deps-report.txt; then
             echo "**Issues found:**" >> $GITHUB_STEP_SUMMARY
-            grep "error\|warn" deps-report.txt | head -10 >> $GITHUB_STEP_SUMMARY
+            grep -E "error|warn" deps-report.txt | head -10 >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ No dependency issues detected" >> $GITHUB_STEP_SUMMARY
           fi
@@ -176,33 +173,32 @@ jobs:
           def find_api_endpoints():
               endpoints = {}
               for py_file in Path('.').rglob('*.py'):
-                  if 'venv' in str(py_file) or '.venv' in str(py_file):
+                  p = str(py_file)
+                  if '/venv/' in p or '/.venv/' in p:
                       continue
                   try:
-                      content = py_file.read_text(encoding='utf-8')
-                      # Flask routes
-                      routes = re.findall(r'@app\.route\([\'"]([^\'"]+)[\'"].*?\)\s*def\s+(\w+)', content)
-                      # FastAPI routes
-                      routes += re.findall(r'@\w+\.(get|post|put|delete)\([\'"]([^\'"]+)[\'"].*?\)\s*async\s+def\s+(\w+)', content)
-                      for route_info in routes:
-                          if len(route_info) == 2:
-                              path, func_name = route_info
-                              endpoints[path] = {'file': str(py_file), 'function': func_name}
-                          elif len(route_info) == 3:
-                              method, path, func_name = route_info
-                              endpoints[f"{method.upper()} {path}"] = {'file': str(py_file), 'function': func_name}
+                      content = py_file.read_text(encoding='utf-8', errors='ignore')
+                      routes = []
+                      routes += re.findall(r'@app\\.route\\([\'"]([^\'"]+)[\'"].*?\\)\\s*def\\s+(\\w+)', content, flags=re.S)
+                      routes += [(f"{m.upper()} {p}", f) for m,p,f in re.findall(
+                          r'@(get|post|put|delete)\\([\'"]([^\'"]+)[\'"].*?\\)\\s*(?:async\\s+)?def\\s+(\\w+)',
+                          content, flags=re.S)]
+                      for k,v in routes:
+                          endpoints[k] = {'file': str(py_file), 'function': v}
                   except Exception as e:
                       print(f"Error parsing {py_file}: {e}")
               return endpoints
 
-def find_frontend_api_calls():
+          def find_frontend_api_calls():
               api_calls = []
-              for js_file in Path('src').rglob('*.{js,jsx,ts,tsx}'):
+              exts = ('.js', '.jsx', '.ts', '.tsx')
+              for js_file in Path('src').rglob('*'):
+                  if not js_file.suffix in exts:
+                      continue
                   try:
-                      content = js_file.read_text(encoding='utf-8')
-                      # Find API calls to backend
-                      fetch_calls = re.findall(r'fetch\([\'"`]([^\'"`;]+)[\'"`]', content)
-                      axios_calls = re.findall(r'axios\.\w+\([\'"`]([^\'"`;]+)[\'"`]', content)
+                      content = js_file.read_text(encoding='utf-8', errors='ignore')
+                      fetch_calls = re.findall(r'fetch\\([\'"`]([^\'"`;]+)[\'"`]', content)
+                      axios_calls = re.findall(r'axios\\.\\w+\\([\'"`]([^\'"`;]+)[\'"`]', content)
                       for call in fetch_calls + axios_calls:
                           if call.startswith('/'):
                               api_calls.append({'path': call, 'file': str(js_file)})
@@ -213,28 +209,26 @@ def find_frontend_api_calls():
           print("## API Contract Analysis")
           backend_endpoints = find_api_endpoints()
           frontend_calls = find_frontend_api_calls()
-          
+
           backend_paths = set(backend_endpoints.keys())
-          frontend_paths = set(call['path'] for call in frontend_calls)
-          
+          frontend_paths = set(c['path'] for c in frontend_calls)
+
           issues = []
-          orphaned_backend = backend_paths - frontend_paths
-          orphaned_frontend = frontend_paths - backend_paths
-          
+          orphaned_backend = {p for p in backend_paths if not any(p.endswith(x) or p.split()[-1] == x for x in frontend_paths)}
+          orphaned_frontend = {p for p in frontend_paths if not any(p.endswith(x) or p.split()[-1] == x for x in backend_paths)}
+
           if orphaned_backend:
               issues.append(f"🔸 Unused backend endpoints: {', '.join(list(orphaned_backend)[:5])}")
           if orphaned_frontend:
               issues.append(f"🔸 Unmatched frontend calls: {', '.join(list(orphaned_frontend)[:5])}")
-          
-          # Check for required diagnostic endpoints
-          required_endpoints = ['/health', '/faults', '/live']
-          missing_required = [ep for ep in required_endpoints if not any(ep in path for path in backend_paths)]
-          if missing_required:
-              issues.append(f"🔸 Missing diagnostic endpoints: {', '.join(missing_required)}")
-          
+
+          required = ['/health', '/faults', '/live']
+          missing = [ep for ep in required if not any(ep in path for path in backend_paths)]
+          if missing:
+              issues.append(f"🔸 Missing diagnostic endpoints: {', '.join(missing)}")
+
           if issues:
-              for issue in issues:
-                  print(issue)
+              print("\\n".join(issues))
           else:
               print("✅ API contracts look consistent")
           EOF
@@ -248,82 +242,52 @@ def find_frontend_api_calls():
           const fs = require('fs');
           const path = require('path');
 
-          function findJSXFiles(dir) {
-            const files = [];
-            try {
-              const items = fs.readdirSync(dir);
-              for (const item of items) {
-                const fullPath = path.join(dir, item);
-                const stat = fs.statSync(fullPath);
-                if (stat.isDirectory() && item !== 'node_modules') {
-                  files.push(...findJSXFiles(fullPath));
-                } else if (item.match(/\.(jsx?|tsx?)$/)) {
-                  files.push(fullPath);
-                }
-              }
-            } catch (e) {
-              // Directory doesn't exist
+          function findFiles(dir) {
+            const out = [];
+            if (!fs.existsSync(dir)) return out;
+            for (const ent of fs.readdirSync(dir)) {
+              const p = path.join(dir, ent);
+              const st = fs.statSync(p);
+              if (st.isDirectory() && ent !== 'node_modules') out.push(...findFiles(p));
+              else if (/\.(jsx?|tsx?)$/.test(ent)) out.push(p);
             }
-            return files;
+            return out;
           }
 
-          function analyzeHookDependencies(content, filename) {
+          function analyze(content, file) {
             const issues = [];
-            const hookRegex = /use(Effect|Memo|Callback)\s*\(\s*([^,]+),\s*\[([^\]]*)\]/g;
-            let match;
-            
-            while ((match = hookRegex.exec(content)) !== null) {
-              const [, hookType, callbackCode, depsArray] = match;
-              
-              const usedVars = new Set();
-              const varRegex = /\b[a-zA-Z_$][a-zA-Z0-9_$]*\b/g;
-              let varMatch;
-              
-              while ((varMatch = varRegex.exec(callbackCode)) !== null) {
-                const varName = varMatch[0];
-                if (!['const', 'let', 'var', 'function', 'return', 'if', 'else', 'Date', 'Math', 'console', 'window', 'document'].includes(varName)) {
-                  usedVars.add(varName);
+            const hook = /use(Effect|Memo|Callback)\s*\(\s*([\s\S]*?)\s*,\s*\[([^\]]*)\]/g;
+            let m;
+            while ((m = hook.exec(content)) !== null) {
+              const [, kind, callbackCode, depsArray] = m;
+              const used = new Set();
+              const varRx = /\b[a-zA-Z_$][a-zA-Z0-9_$]*\b/g;
+              let vm;
+              while ((vm = varRx.exec(callbackCode)) !== null) {
+                const v = vm[0];
+                if (!['const','let','var','function','return','if','else','Date','Math','console','window','document'].includes(v)) {
+                  used.add(v);
                 }
               }
-              
-              const declaredDeps = new Set();
-              if (depsArray.trim()) {
-                depsArray.split(',').forEach(dep => {
-                  const trimmed = dep.trim().replace(/['"]/g, '');
-                  if (trimmed) declaredDeps.add(trimmed);
-                });
-              }
-              
-              // Check for diagnostic-specific dependencies
-              const diagnosticVars = ['entries', 'health', 'socket', 'obdData', 'filters', 'obdSocket'];
-              const missingDiagnosticDeps = diagnosticVars.filter(v => 
-                usedVars.has(v) && !declaredDeps.has(v)
-              );
-              
-              if (missingDiagnosticDeps.length > 0) {
-                issues.push(`${filename}: ${hookType} missing deps: ${missingDiagnosticDeps.join(', ')}`);
-              }
+              const declared = new Set(depsArray.split(',').map(s => s.trim().replace(/['"]/g,'')).filter(Boolean));
+              const diag = ['entries','health','socket','obdData','filters','obdSocket'];
+              const missing = diag.filter(v => used.has(v) && !declared.has(v));
+              if (missing.length) issues.push(`${file}: ${kind} missing deps: ${missing.join(', ')}`);
             }
             return issues;
           }
 
           console.log('\n## React Hook Dependencies');
-          const srcFiles = findJSXFiles('src');
-          const allIssues = [];
-          
-          for (const file of srcFiles) {
+          const files = findFiles('src');
+          const all = [];
+          for (const f of files) {
             try {
-              const content = fs.readFileSync(file, 'utf8');
-              const issues = analyzeHookDependencies(content, file);
-              allIssues.push(...issues);
-            } catch (error) {
-              // Skip files that can't be read
-            }
+              all.push(...analyze(fs.readFileSync(f,'utf8'), f));
+            } catch {}
           }
-          
-          if (allIssues.length > 0) {
+          if (all.length) {
             console.log('**Potential missing dependencies:**');
-            allIssues.slice(0, 10).forEach(issue => console.log(`- ${issue}`));
+            all.slice(0, 10).forEach(i => console.log(`- ${i}`));
           } else {
             console.log('✅ No obvious hook dependency issues found');
           }
@@ -337,62 +301,35 @@ def find_frontend_api_calls():
           cat > analyze-dataflow.js <<'EOF'
           const fs = require('fs');
 
-          function analyzeDataFlow() {
-            const issues = [];
-            
-            // Check DiagnosticSession.jsx integration
-            const diagSessionPath = 'src/pages/DiagnosticSession.jsx';
-            if (fs.existsSync(diagSessionPath)) {
-              const content = fs.readFileSync(diagSessionPath, 'utf8');
-              
-              if (!content.includes('useObdSocket') && !content.includes('obdSocket')) {
-                issues.push('DiagnosticSession: Missing OBD socket integration');
-              }
-              if (!content.includes('computeHealthScore') && !content.includes('healthScore')) {
-                issues.push('DiagnosticSession: Missing health score integration');
-              }
-              if (!content.includes('saveScan') && !content.includes('queueScan')) {
-                issues.push('DiagnosticSession: Missing offline persistence');
-              }
-              if (!content.includes('try') && !content.includes('catch')) {
-                issues.push('DiagnosticSession: Missing error handling');
-              }
-            }
-            
-            // Check health score utility
-            const healthScorePath = 'src/utils/healthScore.js';
-            if (fs.existsSync(healthScorePath)) {
-              const content = fs.readFileSync(healthScorePath, 'utf8');
-              if (!content.includes('score') || !content.includes('confidence')) {
-                issues.push('healthScore: Inconsistent return type structure');
-              }
-              if (!content.includes('Array.isArray') && !content.includes('length')) {
-                issues.push('healthScore: Missing input validation');
-              }
-            }
-            
-            // Check offline queue patterns
-            const queuePaths = ['src/lib/offlineQueue.ts', 'src/lib/offlineQueue.js'];
-            const queuePath = queuePaths.find(p => fs.existsSync(p));
-            if (queuePath) {
-              const content = fs.readFileSync(queuePath, 'utf8');
-              if (!content.includes('localStorage') && !content.includes('IndexedDB')) {
-                issues.push('offlineQueue: Missing persistent storage');
-              }
-              if (!content.includes('navigator.onLine') && !content.includes('online')) {
-                issues.push('offlineQueue: Missing online/offline detection');
-              }
-            }
-            
-            return issues;
+          function has(p, s) {
+            return fs.existsSync(p) && fs.readFileSync(p,'utf8').includes(s);
+          }
+
+          const issues = [];
+          const diag = 'src/pages/DiagnosticSession.jsx';
+          if (fs.existsSync(diag)) {
+            const c = fs.readFileSync(diag,'utf8');
+            if (!/useObdSocket|obdSocket/.test(c)) issues.push('DiagnosticSession: Missing OBD socket integration');
+            if (!/computeHealthScore|healthScore/.test(c)) issues.push('DiagnosticSession: Missing health score integration');
+            if (!/saveScan|queueScan/.test(c)) issues.push('DiagnosticSession: Missing offline persistence');
+            if (!/try\s*{[\s\S]*?}\s*catch/.test(c)) issues.push('DiagnosticSession: Missing error handling');
+          }
+          if (fs.existsSync('src/utils/healthScore.js')) {
+            const c = fs.readFileSync('src/utils/healthScore.js','utf8');
+            if (!/score/.test(c) || !/confidence/.test(c)) issues.push('healthScore: Inconsistent return structure');
+            if (!/Array\.isArray|length/.test(c)) issues.push('healthScore: Missing input validation');
+          }
+          const q = ['src/lib/offlineQueue.ts','src/lib/offlineQueue.js'].find(fs.existsSync);
+          if (q) {
+            const c = fs.readFileSync(q,'utf8');
+            if (!/localStorage|IndexedDB/.test(c)) issues.push('offlineQueue: Missing persistent storage');
+            if (!/navigator\.onLine|online/.test(c)) issues.push('offlineQueue: Missing online/offline detection');
           }
 
           console.log('\n## Data Flow Analysis');
-          const issues = analyzeDataFlow();
-          
-          if (issues.length > 0) {
+          if (issues.length) {
             console.log('**Integration issues found:**');
-            issues.forEach(issue => console.log(`- ${issue}`));
+            issues.forEach(i => console.log('- ' + i));
           } else {
             console.log('✅ Data flow patterns look good');
           }
@@ -400,7 +337,7 @@ def find_frontend_api_calls():
 
           node analyze-dataflow.js >> $GITHUB_STEP_SUMMARY
 
-      # --- Standard Quality Checks ---
+      # -------- Standard quality checks ----------
       - name: Lint (ESLint)
         continue-on-error: true
         run: |
@@ -476,8 +413,8 @@ def find_frontend_api_calls():
           PERF_RUNS: "20"
           PERF_WARMUP: "5"
         run: |
-          if [ -f .github/scripts/healthscore-bench.mjs ]; then
-            node .github/scripts/healthscore-bench.mjs
+          if [ -f scripts/healthscore-bench.mjs ]; then
+            node scripts/healthscore-bench.mjs
           else
             echo "Performance benchmark script not found, skipping"
           fi
@@ -486,7 +423,6 @@ def find_frontend_api_calls():
         continue-on-error: true
         run: |
           if find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" | head -1 | grep -q ".py"; then
-            pip install flake8 >/dev/null 2>&1 || true
             flake8 . || echo "::warning::Python linting issues found"
           fi
 
@@ -511,4 +447,5 @@ def find_frontend_api_calls():
             deps-report.txt
             deps-graph.svg
             bandit-report.json
+            coverage/**/coverage-summary.json
           if-no-files-found: ignore
