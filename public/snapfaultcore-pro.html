@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnapFaultCore Pro</title>
+  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlNuYXBGYXVsdENvcmUgUHJvIiwKICAic2hvcnRfbmFtZSI6ICJTbmFwRmF1bHQiLAogICJkZXNjcmlwdGlvbiI6ICJQcm9mZXNzaW9uYWwgQXV0b21vdGl2ZSBEaWFnbm9zdGljIFN5c3RlbSIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGEwZTEzIiwKICAidGhlbWVfY29sb3IiOiAiIzAwZmY2NiIsCiAgImljb25zIjogW3sic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU5qUWlJR2hsYVdkb2REMGlOalFpSUhabGNuTnBiMjRnUFNJeExqa2lQaUE4Y21WamRDQjNhV1IwYUQwaU5qUWlJR2hsYVdkb2REMGlOalFpSUdacGJHdzlJaU13ZEdOYklpOCtQSEJoZEdnaVpEMGlUREV5SURReVNqRTJJRFE0U0RFMklEUTRTRkkwVWpreElEZzFJREUySURReVdpSWdabWxzYkQwaUl6QXdabVkyTmlJdlBqd3ZjM1puUGc9PSIsInNpemVzIjoiNjR4NjQiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=" />
+  <meta name="theme-color" content="#00ff66" />
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+    :root {
+      --green: #00ff66; --blue: #0066ff; --red: #ff4444; --orange: #ffaa00;
+      --bg: #0a0e13; --panel-bg: rgba(15, 20, 25, 0.9); --border: rgba(0, 255, 102, 0.3);
+      --glow: 0 0 20px rgba(0, 255, 102, 0.3); --text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+      --header-height: 60px; --sidebar-width: 280px;
+    }
+
+    body {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      background: var(--bg); color: var(--green); overflow-x: hidden;
+      min-height: 100vh; position: relative;
+    }
+
+    /* Background layers (optimized) */
+    .background-container {
+      position: fixed; inset: 0; z-index: -10;
+      background: radial-gradient(ellipse at center, #0f1419 0%, #0a0e13 70%, #000 100%);
+    }
+
+    .code-background {
+      position: absolute; inset: 0; opacity: 0.15; font-size: 10px;
+      line-height: 1.4; white-space: pre; overflow: hidden;
+      animation: codeScroll 30s linear infinite; font-weight: 300;
+    }
+    @keyframes codeScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+
+    .grid-overlay {
+      position: absolute; inset: 0; opacity: 0.02;
+      background-image: 
+        linear-gradient(0deg, transparent 95%, var(--border) 96%, var(--border) 97%, transparent 98%),
+        linear-gradient(90deg, transparent 95%, var(--border) 96%, var(--border) 97%, transparent 98%);
+      background-size: 100px 100px; animation: gridDrift 20s linear infinite;
+    }
+    @keyframes gridDrift { 0% { transform: translate(0, 0); } 100% { transform: translate(100px, 100px); } }
+
+    .car-silhouette {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: 600px; height: 200px; opacity: 0.04; z-index: -5;
+      background: linear-gradient(135deg, transparent 0%, var(--green) 30%, var(--blue) 70%, transparent 100%);
+      clip-path: polygon(10% 85%, 20% 75%, 30% 70%, 40% 65%, 50% 62%, 60% 65%, 70% 70%, 80% 75%, 90% 85%, 90% 95%, 10% 95%);
+      animation: carGlow 8s ease-in-out infinite;
+    }
+    @keyframes carGlow { 0%, 100% { opacity: 0.03; } 50% { opacity: 0.06; } }
+
+    /* Main Layout */
+    .app-container {
+      display: flex; min-height: 100vh; position: relative; z-index: 1;
+    }
+
+    /* Header */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--header-height);
+      background: var(--panel-bg); border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px); z-index: 100; display: flex; align-items: center;
+      padding: 0 1rem; justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 1.5rem; font-weight: 700; color: var(--green);
+      text-shadow: var(--text-shadow);
+    }
+
+    .connection-status {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.9rem; color: var(--green);
+    }
+
+    .status-indicator {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--green); box-shadow: var(--glow);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .status-indicator.disconnected { background: var(--red); animation: none; }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed; left: 0; top: var(--header-height);
+      width: var(--sidebar-width); height: calc(100vh - var(--header-height));
+      background: var(--panel-bg); backdrop-filter: blur(10px);
+      border-right: 1px solid var(--border); z-index: 90;
+      overflow-y: auto; padding: 1rem;
+    }
+
+    .nav-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .nav-title {
+      font-size: 0.8rem; color: var(--blue); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 0.5rem; font-weight: 500;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem; border-radius: 6px; cursor: pointer;
+      transition: all 0.3s ease; margin-bottom: 0.25rem;
+      font-size: 0.9rem; color: rgba(255, 255, 255, 0.8);
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: rgba(0, 255, 102, 0.1); color: var(--green);
+      border-left: 3px solid var(--green);
+    }
+
+    .nav-icon {
+      width: 16px; height: 16px; background: currentColor;
+      mask-size: contain; mask-repeat: no-repeat; mask-position: center;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: var(--sidebar-width); margin-top: var(--header-height);
+      padding: 1.5rem; flex: 1; min-height: calc(100vh - var(--header-height));
+    }
+
+    /* Diagnostic Toolbar */
+    .diagnostic-toolbar {
+      display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem; border: none; border-radius: 8px;
+      font-family: inherit; font-weight: 500; cursor: pointer;
+      transition: all 0.3s ease; font-size: 0.9rem;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      color: #000; box-shadow: var(--glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 255, 102, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent; color: var(--green);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(0, 255, 102, 0.1);
+    }
+
+    .btn-danger {
+      background: rgba(255, 68, 68, 0.2); color: var(--red);
+      border: 1px solid rgba(255, 68, 68, 0.3);
+    }
+
+    .btn:disabled {
+      opacity: 0.5; cursor: not-allowed;
+    }
+
+    /* Dashboard Grid */
+    .dashboard {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem; margin-bottom: 2rem;
+    }
+
+    /* Panels */
+    .panel {
+      background: var(--panel-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem; backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .panel-header {
+      display: flex; justify-content: between; align-items: center;
+      margin-bottom: 1rem; padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-size: 1.1rem; font-weight: 600; color: var(--green);
+      text-shadow: var(--text-shadow);
+    }
+
+    .panel-actions {
+      display: flex; gap: 0.5rem;
+    }
+
+    .panel-btn {
+      background: none; border: none; color: var(--blue);
+      cursor: pointer; padding: 0.25rem; border-radius: 4px;
+      transition: all 0.3s ease; font-size: 0.8rem;
+    }
+
+    .panel-btn:hover {
+      background: rgba(0, 102, 255, 0.2);
+    }
+
+    /* Live Data Table */
+    .data-table {
+      width: 100%; border-collapse: collapse; font-size: 0.85rem;
+    }
+
+    .data-table th, .data-table td {
+      padding: 0.75rem 1rem; text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .data-table th {
+      background: rgba(0, 255, 102, 0.1); color: var(--green);
+      font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .data-value {
+      font-weight: 500; color: var(--green);
+    }
+
+    .data-unit {
+      color: var(--blue); font-size: 0.8rem;
+    }
+
+    /* Fault Codes */
+    .fault-list {
+      max-height: 300px; overflow-y: auto;
+    }
+
+    .fault-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 6px;
+      background: rgba(255, 68, 68, 0.1); border-left: 3px solid var(--red);
+    }
+
+    .fault-item.warning {
+      background: rgba(255, 170, 0, 0.1); border-left-color: var(--orange);
+    }
+
+    .fault-item.info {
+      background: rgba(0, 153, 255, 0.1); border-left-color: var(--blue);
+    }
+
+    .fault-code {
+      font-weight: 600; font-size: 0.9rem;
+    }
+
+    .fault-desc {
+      font-size: 0.8rem; opacity: 0.8; margin-top: 0.25rem;
+    }
+
+    .fault-actions {
+      display: flex; gap: 0.5rem;
+    }
+ Charts */
+    .chart-container {
+      height: 200px; position: relative;
+      background: rgba(0, 0, 0, 0.2); border-radius: 8px;
+      padding: 1rem; margin-top: 1rem;
+    }
+
+    .chart-canvas {
+      width: 100%; height: 100%;
+    }
+
+    /* Progress Indicators */
+    .progress-container {
+      margin: 1rem 0;
+    }
+
+    .progress-label {
+      display: flex; justify-content: space-between; margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .progress-bar {
+      width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px; overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--green), var(--blue));
+      border-radius: 3px; transition: width 0.3s ease;
+      animation: progressPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes progressPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* System Status */
+    .system-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+    }
+
+    .system-item {
+      text-align: center; padding: 1rem; border-radius: 8px;
+      background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .system-item:hover {
+      background: rgba(0, 255, 102, 0.05); transform: translateY(-2px);
+    }
+
+    .system-icon {
+      width: 32px; height: 32px; margin: 0 auto 0.5rem;
+      background: var(--green); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 0.8rem;
+    }
+
+    .system-name {
+      font-size: 0.8rem; margin-bottom: 0.25rem;
+    }
+
+    .system-status {
+      font-size: 0.7rem; color: var(--green);
+    }
+
+    .system-status.warning { color: var(--orange); }
+    .system-status.error { color: var(--red); }
+
+    /* Floating Elements (reduced opacity) */
+    .floating-elements {
+      position: fixed; inset: 0; pointer-events: none; z-index: -1;
+    }
+
+    .floating-fault {
+      position: absolute; font-size: 11px; opacity: 0.3;
+      animation: floatUp 12s linear infinite;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(100vh); opacity: 0; }
+      10%, 90% { opacity: 0.3; }
+      100% { transform: translateY(-10vh); opacity: 0; }
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal.show { display: flex; }
+
+    .modal-content {
+      background: var(--panel-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%;
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-size: 1.2rem; font-weight: 600; color: var(--green);
+    }
+
+    .close-btn {
+      background: none; border: none; color: var(--red);
+      font-size: 1.5rem; cursor: pointer; padding: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar {
+        transform: translateX(-100%); transition: transform 0.3s ease;
+      }
+      .sidebar.show { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+      .dashboard { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .header { padding: 0 0.5rem; }
+      .logo { font-size: 1.2rem; }
+      .diagnostic-toolbar { flex-direction: column; }
+      .main-content { padding: 1rem; }
+      .panel { padding: 1rem; }
+    }
+
+    /* Utility Classes */
+    .hidden { display: none !important; }
+    .loading { opacity: 0.5; pointer-events: none; }
+    .text-center { text-align: center; }
+    .text-success { color: var(--green); }
+    .text-warning { color: var(--orange); }
+    .text-error { color: var(--red); }
+    .text-info { color: var(--blue); }
+  </style>
+</head>
+<body>
+  <!-- Background -->
+  <div class="background-container">
+    <div class="grid-overlay"></div>
+    <div class="code-background" id="codeBackground"></div>
+    <div class="car-silhouette"></div>
+  </div>
+
+  <!-- Floating Elements -->
+  <div class="floating-elements" id="floatingElements"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">SnapFaultCore Pro</div>
+    <div class="connection-status">
+      <div class="status-indicator" id="statusIndicator"></div>
+      <span id="connectionText">Connected</span>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="nav-section">
+      <div class="nav-title">Diagnostics</div>
+      <div class="nav-item active" data-section="dashboard">
+        <div class="nav-icon"></div>
+        Dashboard
+      </div>
+      <div class="nav-item" data-section="live-data">
+        <div class="nav-icon"></div>
+        Live Data
+      </div>
+      <div class="nav-item" data-section="fault-codes">
+        <div class="nav-icon"></div>
+        Fault Codes
+      </div>
+      <div class="nav-item" data-section="systems">
+        <div class="nav-icon"></div>
+        Systems
+      </div>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-title">Tools</div>
+      <div class="nav-item" data-section="scanner">
+        <div class="nav-icon"></div>
+        Scanner
+      </div>
+      <div class="nav-item" data-section="reports">
+        <div class="nav-icon"></div>
+        Reports
+      </div>
+      <div class="nav-item" data-section="settings">
+        <div class="nav-icon"></div>
+        Settings
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-title">Info</div>
+      <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); padding: 0.5rem;">
+        Powered by<br>SnapCore AI Systems Ltd
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Diagnostic Toolbar -->
+    <div class="diagnostic-toolbar">
+      <button class="btn btn-primary" id="scanBtn">
+        <span id="scanText">Scan Vehicle</span>
+      </button>
+      <button class="btn btn-secondary" id="clearCodesBtn">Clear DTCs</button>
+      <button class="btn btn-secondary" id="liveDataBtn">Start Live Data</button>
+      <button class="btn btn-secondary" id="exportBtn">Export Report</button>
+      <button class="btn btn-danger" id="emergencyBtn">Emergency Stop</button>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="progress-container" id="progressContainer" style="display: none;">
+      <div class="progress-label">
+        <span id="progressLabel">Scanning...</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard">
+      <!-- Live Data Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Live Data Stream</div>
+          <div class="panel-actions">
+            <button class="panel-btn" onclick="toggleLiveData()">⏸️</button>
+            <button class="panel-btn" onclick="exportLiveData()">📊</button>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Value</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="liveDataTable">
+            <tr><td>Engine RPM</td><td><span class="data-value">0</span> <span class="data-unit">RPM</span></td><td class="text-success">OK</td></tr>
+            <tr><td>Vehicle Speed</td><td><span class="data-value">0</span> <span class="data-unit">km/h</span></td><td class="text-success">OK</td></tr>
+            <tr><td>Coolant Temp</td><td><span class="data-value">85</span> <span class="data-unit">°C</span></td><td class="text-success">OK</td></tr>
+            <tr><td>Throttle Position</td><td><span class="data-value">12</span> <span class="data-unit">%</span></td><td class="text-success">OK</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Fault Codes Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Active Fault Codes</div>
+          <div class="panel-actions">
+            <button class="panel-btn" onclick="refreshFaultCodes()">🔄</button>
+            <button class="panel-btn" onclick="clearAllCodes()">🗑️</button>
+          </div>
+        </div>
+        <div class="fault-list" id="faultList">
+          <div class="fault-item">
+            <div>
+              <div class="fault-code text-error">P0171</div>
+              <div class="fault-desc">System Too Lean (Bank 1)</div>
+            </div>
+            <div class="fault-actions">
+              <button class="panel-btn">📋</button>
+              <button class="panel-btn">❌</button>
+            </div>
+          </div>
+          <div class="fault-item warning">
+            <div>
+              <div class="fault-code text-warning">P0420</div>
+              <div class="fault-desc">Catalyst System Efficiency Below Threshold</div>
+            </div>
+            <div class="fault-actions">
+              <button class="panel-btn">📋</button>
+              <button class="panel-btn">❌</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Status Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">System Status</div>
+          <div class="panel-actions">
+            <button class="panel-btn" onclick="refreshSystems()">🔄</button>
+          </div>
+        </div>
+        <div class="system-grid">
+          <div class="system-item">
+            <div class="system-icon">ECU</div>
+            <div class="system-name">Engine Control</div>
+            <div class="system-status">Ready</div>
+          </div>
+          <div class="system-item">
+            <div class="system-icon">ABS</div>
+            <div class="system-name">Anti-lock Brakes</div>
+            <div class="system-status">Ready</div>
+          </div>
+          <div class="system-item">
+            <div class="system-icon">SRS</div>
+            <div class="system-name">Airbag System</div>
+            <div class="system-status warning">Warning</div>
+          </div>
+          <div class="system-item">
+            <div class="system-icon">TCU</div>
+            <div class="system-name">Transmission</div>
+            <div class="system-status">Ready</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Chart -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Performance Monitor</div>
+          <div class="panel-actions">
+            <button class="panel-btn" onclick="toggleChart()">📈</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas class="chart-canvas" id="performanceChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Diagnostic Report</div>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      <div id="modalBody">
+        <p>Generating diagnostic report...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Enhanced SnapFaultCore Pro Application
+    class SnapFaultCore {
+      constructor() {
+        this.isConnected = true;
+        this.isScanning = false;
+        this.liveDataActive = false;
+        this.currentSection = 'dashboard';
+        this.diagnosticData = new Map();
+        this.faultCodes = [];
+        this.liveDataParams = {
+          'ENGINE_RPM': { value: 0, unit: 'RPM', min: 0, max: 8000 },
+          'VEHICLE_SPEED': { value: 0, unit: 'km/h', min: 0, max: 200 },
+          'COOLANT_TEMP': { value: 85, unit: '°C', min: -40, max: 150 },
+          'THROTTLE_POS': { value: 12, unit: '%', min: 0, max: 100 },
+          'FUEL_LEVEL': { value: 75, unit: '%', min: 0, max: 100 },
+          'BATTERY_VOLT': { value: 12.6, unit: 'V', min: 10, max: 16 }
+        };
+        this.init();
+      }
+
+      init() {
+        this.setupEventListeners();
+        this.startBackgroundAnimations();
+        this.generateCodeBackground();
+        this.startLiveDataSimulation();
+        this.updateConnectionStatus();
+      }
+
+      setupEventListeners() {
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            const section = e.currentTarget.dataset.section;
+            this.switchSection(section);
+          });
+        });
+
+        // Toolbar buttons
+        document.getElementById('scanBtn').addEventListener('click', () => this.startScan());
+        document.getElementById('clearCodesBtn').addEventListener('click', () => this.clearCodes());
+        document.getElementById('liveDataBtn').addEventListener('click', () => this.toggleLiveData());
+        document.getElementById('exportBtn').addEventListener('click', () => this.exportReport());
+        document.getElementById('emergencyBtn').addEventListener('click', () => this.emergencyStop());
+
+        // Responsive sidebar
+        window.addEventListener('resize', () => this.handleResize());
+      }
+
+      switchSection(section) {
+        // Update active navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+          item.classList.remove('active');
+        });
+        document.querySelector(`[data-section="${section}"]`).classList.add('active');
+        this.currentSection = section;
+      }
+
+      async startScan() {
+        if (this.isScanning) return;
+        
+        this.isScanning = true;
+        const scanBtn = document.getElementById('scanBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressLabel = document.getElementById('progressLabel');
+
+        // Update UI
+        scanBtn.disabled = true;
+        document.getElementById('scanText').textContent = 'Scanning...';
+        progressContainer.style.display = 'block';
+
+        // Simulate scanning process
+        const steps = [
+          { label: 'Connecting to ECU...', duration: 1000 },
+          { label: 'Reading fault codes...', duration: 2000 },
+          { label: 'Checking system readiness...', duration: 1500 },
+          { label: 'Analyzing data...', duration: 1000 },
+          { label: 'Scan complete!', duration: 500 }
+        ];
+
+        let totalProgress = 0;
+        for (let i = 0; i < steps.length; i++) {
+          const step = steps[i];
+          progressLabel.textContent = step.label;
+          
+          await this.animateProgress(totalProgress, (i + 1) * 20, step.duration);
+          totalProgress = (i + 1) * 20;
+        }
+
+        // Generate random fault codes
+        this.generateRandomFaultCodes();
+        this.updateFaultCodesDisplay();
+
+        // Reset UI
+        setTimeout(() => {
+          this.isScanning = false;
+          scanBtn.disabled = false;
+          document.getElementById('scanText').textContent = 'Scan Vehicle';
+          progressContainer.style.display = 'none';
+          progressFill.style.width = '0%';
+          progressPercent.textContent = '0%';
+        }, 1000);
+      }
+
+      animateProgress(start, end, duration) {
+        return new Promise(resolve => {
+          const startTime = Date.now();
+          const progressFill = document.getElementById('progressFill');
+          const progressPercent = document.getElementById('progressPercent');
+
+          const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const currentValue = start + (end - start) * progress;
+
+            progressFill.style.width = currentValue + '%';
+            progressPercent.textContent = Math.round(currentValue) + '%';
+
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              resolve();
+            }
+          };
+          animate();
+        });
+      }
+generateRandomFaultCodes() {
+        const possibleCodes = [
+          { code: 'P0001', desc: 'Fuel Volume Regulator Control Circuit', type: 'error' },
+          { code: 'P0101', desc: 'Mass Air Flow Sensor Range/Performance', type: 'error' },
+          { code: 'P0171', desc: 'System Too Lean (Bank 1)', type: 'warning' },
+          { code: 'P0300', desc: 'Random/Multiple Cylinder Misfire', type: 'error' },
+          { code: 'P0420', desc: 'Catalyst System Efficiency Below Threshold', type: 'warning' },
+          { code: 'B0001', desc: 'Driver Airbag Squib Circuit Low', type: 'error' },
+          { code: 'U0100', desc: 'Lost Communication With ECM/PCM', type: 'error' },
+          { code: 'C0035', desc: 'Left Front Wheel Speed Sensor Circuit', type: 'warning' },
+          { code: 'P1234', desc: 'Manufacturer Specific Code', type: 'info' },
+          { code: 'P0505', desc: 'Idle Air Control System Malfunction', type: 'warning' }
+        ];
+
+        this.faultCodes = [];
+        const numCodes = Math.floor(Math.random() * 4) + 1;
+        
+        for (let i = 0; i < numCodes; i++) {
+          const randomCode = possibleCodes[Math.floor(Math.random() * possibleCodes.length)];
+          if (!this.faultCodes.find(code => code.code === randomCode.code)) {
+            this.faultCodes.push({
+              ...randomCode,
+              timestamp: new Date(),
+              status: 'active'
+            });
+          }
+        }
+      }
+
+      updateFaultCodesDisplay() {
+        const faultList = document.getElementById('faultList');
+        faultList.innerHTML = '';
+
+        if (this.faultCodes.length === 0) {
+          faultList.innerHTML = '<div class="text-center text-success">No fault codes detected</div>';
+          return;
+        }
+
+        this.faultCodes.forEach((fault, index) => {
+          const faultElement = document.createElement('div');
+          faultElement.className = `fault-item ${fault.type}`;
+          faultElement.innerHTML = `
+            <div>
+              <div class="fault-code text-${fault.type === 'error' ? 'error' : fault.type === 'warning' ? 'warning' : 'info'}">${fault.code}</div>
+              <div class="fault-desc">${fault.desc}</div>
+              <div style="font-size: 0.7rem; opacity: 0.6; margin-top: 0.25rem;">
+                Detected: ${fault.timestamp.toLocaleTimeString()}
+              </div>
+            </div>
+            <div class="fault-actions">
+              <button class="panel-btn" onclick="app.showFaultDetails('${fault.code}')" title="Details">📋</button>
+              <button class="panel-btn" onclick="app.clearSingleCode('${fault.code}')" title="Clear">❌</button>
+            </div>
+          `;
+          faultList.appendChild(faultElement);
+        });
+      }
+
+      showFaultDetails(code) {
+        const fault = this.faultCodes.find(f => f.code === code);
+        if (!fault) return;
+
+        document.getElementById('modalTitle').textContent = `Fault Code: ${code}`;
+        document.getElementById('modalBody').innerHTML = `
+          <div style="line-height: 1.6;">
+            <p><strong>Description:</strong> ${fault.desc}</p>
+            <p><strong>Type:</strong> ${fault.type.toUpperCase()}</p>
+            <p><strong>Status:</strong> ${fault.status}</p>
+            <p><strong>Detected:</strong> ${fault.timestamp.toLocaleString()}</p>
+            <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border);">
+            <p><strong>Possible Causes:</strong></p>
+            <ul style="margin-left: 1rem; margin-top: 0.5rem;">
+              <li>Faulty sensor or wiring</li>
+              <li>Mechanical component failure</li>
+              <li>Software calibration issue</li>
+            </ul>
+            <p style="margin-top: 1rem;"><strong>Recommended Actions:</strong></p>
+            <ul style="margin-left: 1rem; margin-top: 0.5rem;">
+              <li>Inspect related components</li>
+              <li>Check wiring and connections</li>
+              <li>Perform component testing</li>
+            </ul>
+          </div>
+        `;
+        this.showModal();
+      }
+
+      clearSingleCode(code) {
+        this.faultCodes = this.faultCodes.filter(f => f.code !== code);
+        this.updateFaultCodesDisplay();
+        this.showNotification(`Cleared fault code: ${code}`, 'success');
+      }
+
+      clearCodes() {
+        if (this.faultCodes.length === 0) {
+          this.showNotification('No fault codes to clear', 'info');
+          return;
+        }
+
+        const count = this.faultCodes.length;
+        this.faultCodes = [];
+        this.updateFaultCodesDisplay();
+        this.showNotification(`Cleared ${count} fault code(s)`, 'success');
+      }
+
+      toggleLiveData() {
+        this.liveDataActive = !this.liveDataActive;
+        const btn = document.getElementById('liveDataBtn');
+        btn.textContent = this.liveDataActive ? 'Stop Live Data' : 'Start Live Data';
+        
+        if (this.liveDataActive) {
+          this.showNotification('Live data streaming started', 'success');
+        } else {
+          this.showNotification('Live data streaming stopped', 'info');
+        }
+      }
+
+      startLiveDataSimulation() {
+        setInterval(() => {
+          if (!this.liveDataActive) return;
+
+          // Update live data values
+          Object.keys(this.liveDataParams).forEach(key => {
+            const param = this.liveDataParams[key];
+            let change = (Math.random() - 0.5) * 0.1;
+            
+            if (key === 'ENGINE_RPM') {
+              change = (Math.random() - 0.5) * 200;
+              param.value = Math.max(600, Math.min(6000, param.value + change));
+            } else if (key === 'VEHICLE_SPEED') {
+              change = (Math.random() - 0.5) * 5;
+              param.value = Math.max(0, Math.min(120, param.value + change));
+            } else if (key === 'COOLANT_TEMP') {
+              change = (Math.random() - 0.5) * 2;
+              param.value = Math.max(70, Math.min(110, param.value + change));
+            } else {
+              param.value = Math.max(param.min, Math.min(param.max, param.value + change));
+            }
+          });
+
+          this.updateLiveDataDisplay();
+        }, 1000);
+      }
+
+      updateLiveDataDisplay() {
+        const tableBody = document.getElementById('liveDataTable');
+        const rows = tableBody.querySelectorAll('tr');
+        
+        const params = Object.keys(this.liveDataParams);
+        rows.forEach((row, index) => {
+          if (index < params.length) {
+            const key = params[index];
+            const param = this.liveDataParams[key];
+            const valueCell = row.querySelector('.data-value');
+            const statusCell = row.cells[2];
+            
+            if (valueCell) {
+              valueCell.textContent = typeof param.value === 'number' ? 
+                param.value.toFixed(key === 'BATTERY_VOLT' ? 1 : 0) : param.value;
+            }
+
+            // Update status based on value
+            let status = 'OK';
+            let statusClass = 'text-success';
+            
+            if (key === 'COOLANT_TEMP' && param.value > 100) {
+              status = 'HIGH';
+              statusClass = 'text-warning';
+            } else if (key === 'ENGINE_RPM' && param.value > 5000) {
+              status = 'HIGH';
+              statusClass = 'text-warning';
+            } else if (key === 'BATTERY_VOLT' && param.value < 12.0) {
+              status = 'LOW';
+              statusClass = 'text-warning';
+            }
+
+            statusCell.textContent = status;
+            statusCell.className = statusClass;
+          }
+        });
+      }
+
+      exportReport() {
+        document.getElementById('modalTitle').textContent = 'Export Diagnostic Report';
+        document.getElementById('modalBody').innerHTML = `
+          <div>
+            <p style="margin-bottom: 1rem;">Generate comprehensive diagnostic report:</p>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" checked> Include fault codes
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" checked> Include live data
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" checked> Include system status
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox"> Include recommendations
+              </label>
+            </div>
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+              <button class="btn btn-primary" onclick="app.generatePDFReport()">Generate PDF</button>
+              <button class="btn btn-secondary" onclick="app.generateCSVReport()">Export CSV</button>
+            </div>
+          </div>
+        `;
+        this.showModal();
+      }
+
+      generatePDFReport() {
+        this.showNotification('PDF report generated successfully', 'success');
+        this.closeModal();
+        // In a real app, this would generate and download a PDF
+      }
+
+      generateCSVReport() {
+        const csvContent = this.generateCSVContent();
+        this.downloadCSV(csvContent, 'diagnostic_report.csv');
+        this.showNotification('CSV report downloaded', 'success');
+        this.closeModal();
+      }
+
+      generateCSVContent() {
+        let csv = 'Timestamp,Parameter,Value,Unit,Status\n';
+        const timestamp = new Date().toISOString();
+        
+        Object.entries(this.liveDataParams).forEach(([key, param]) => {
+          csv += `${timestamp},${key},${param.value},${param.unit},OK\n`;
+        });
+        
+        return csv;
+      }
+
+      downloadCSV(content, filename) {
+        const blob = new Blob([content], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+
+      emergencyStop() {
+        this.isScanning = false;
+        this.liveDataActive = false;
+        
+        // Reset all UI states
+        document.getElementById('scanBtn').disabled = false;
+        document.getElementById('scanText').textContent = 'Scan Vehicle';
+        document.getElementById('liveDataBtn').textContent = 'Start Live Data';
+        document.getElementById('progressContainer').style.display = 'none';
+        
+        this.showNotification('Emergency stop activated - all operations halted', 'error');
+      }
+
+      updateConnectionStatus() {
+        const indicator = document.getElementById('statusIndicator');
+        const text = document.getElementById('connectionText');
+        
+        if (this.isConnected) {
+          indicator.className = 'status-indicator';
+          text.textContent = 'Connected';
+        } else {
+          indicator.className = 'status-indicator disconnected';
+          text.textContent = 'Disconnected';
+        }
+      }
+
+      showModal() {
+        document.getElementById('modal').classList.add('show');
+      }
+
+      closeModal() {
+        document.getElementById('modal').classList.remove('show');
+      }
+
+      showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed; top: 20px; right: 20px; z-index: 2000;
+          background: var(--panel-bg); border: 1px solid var(--border);
+          border-radius: 8px; padding: 1rem; backdrop-filter: blur(10px);
+          color: var(--${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'orange' : 'blue'});
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          transform: translateX(100%); transition: transform 0.3s ease;
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+          notification.style.transform = 'translateX(0)';
+        }, 10);
+        
+        // Remove after delay
+        setTimeout(() => {
+          notification.style.transform = 'translateX(100%)';
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 300);
+        }, 3000);
+      }
+
+      startBackgroundAnimations() {
+        // Create floating fault codes
+        setInterval(() => {
+          this.createFloatingFault();
+        }, 3000);
+      }
+
+      createFloatingFault() {
+        const container = document.getElementById('floatingElements');
+        const codes = ['P0171', 'P0300', 'P0420', 'B0001', 'U0100'];
+        const code = codes[Math.floor(Math.random() * codes.length)];
+        
+        const element = document.createElement('div');
+        element.className = 'floating-fault';
+        element.textContent = code;
+        element.style.left = Math.random() * 90 + '%';
+        element.style.color = ['#ff4444', '#ffaa00', '#0099ff'][Math.floor(Math.random() * 3)];
+        
+        container.appendChild(element);
+        
+        setTimeout(() => {
+          if (container.contains(element)) {
+            container.removeChild(element);
+          }
+        }, 12000);
+      }
+
+generateCodeBackground() {
+        const codeBackground = document.getElementById('codeBackground');
+        const diagnosticCode = `
+// ECU Diagnostic Protocol - ISO 14229 UDS
+void read_diagnostic_data() {
+  uint8_t request[] = {0x22, 0xF1, 0x90}; // Read VIN
+  if (send_uds_request(request, 3)) {
+    process_positive_response();
+  }
+}
+
+// CAN Bus Frame Processing
+struct CANFrame {
+  uint32_t id;
+  uint8_t data[8];
+  uint8_t dlc;
+  uint32_t timestamp;
+};
+
+// Live Data PID Processing
+float decode_engine_rpm(uint8_t* data) {
+  return ((data[0] * 256) + data[1]) / 4.0;
+}
+
+// Fault Code Management
+typedef struct {
+  uint16_t dtc_code;
+  uint8_t status_byte;
+  uint8_t severity;
+  uint32_t occurrence_count;
+} DiagnosticTroubleCode;
+
+// System Readiness Monitoring
+bool check_system_readiness() {
+  return (obd_monitors.catalyst && 
+          obd_monitors.evap_system &&
+          obd_monitors.oxygen_sensor);
+}
+        `;
+        
+        codeBackground.innerHTML = (diagnosticCode + '\n\n').repeat(6);
+      }
+
+      handleResize() {
+        // Handle responsive behavior
+        if (window.innerWidth <= 1024) {
+          // Mobile/tablet layout adjustments
+        }
+      }
+    }
+
+    // Global functions for UI interactions
+    function toggleLiveData() {
+      app.toggleLiveData();
+    }
+
+    function exportLiveData() {
+      app.exportReport();
+    }
+
+    function refreshFaultCodes() {
+      app.generateRandomFaultCodes();
+      app.updateFaultCodesDisplay();
+      app.showNotification('Fault codes refreshed', 'info');
+    }
+
+    function clearAllCodes() {
+      app.clearCodes();
+    }
+
+    function refreshSystems() {
+      app.showNotification('System status updated', 'info');
+    }
+
+    function toggleChart() {
+      app.showNotification('Chart functionality coming soon', 'info');
+    }
+
+    function closeModal() {
+      app.closeModal();
+    }
+
+    // Initialize application
+    const app = new SnapFaultCore();
+
+    // PWA Installation
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Could show install button here
+    });
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('data:text/javascript;base64,Ly8gU2VydmljZSBXb3JrZXIKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBpbnN0YWxsZWQnKTsKfSk7')
+        .catch(err => console.log('Service Worker registration failed'));
+    }
+  </script>
+</body>
+</html>

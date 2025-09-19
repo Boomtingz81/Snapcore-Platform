@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Helmet } from "react-helmet";
 import { motion } from "framer-motion";
 import { CalendarClock, Lock, CheckCircle, Trash2 } from "lucide-react";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../../lib/supabaseClient";
 
 const ALLOWED_TIERS = ["pro", "garage", "owner"];
 

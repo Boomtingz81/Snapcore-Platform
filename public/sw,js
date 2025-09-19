@@ -1,0 +1,279 @@
+/* public/sw.js */
+const STATIC_CACHE = 'ev-analytics-static-v1.3.0';
+const API_CACHE = 'ev-analytics-api-v1.3.0';
+
+// NOTE: If you use Vite, replace static paths after build (or use workbox).
+// Include your app shell and must-have assets here:
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
+  // Do NOT list hashed assets manually; let workbox handle them if you add it later.
+];
+
+// API paths we want to cache (GET only)
+const API_PREFIX = '/api/';
+const OFFLINE_HTML_FALLBACK = '/index.html';
+
+/* ---------- Install: pre-cache app shell ---------- */
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(STATIC_CACHE)
+      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
+      .catch(() => {/* ignore */})
+  );
+});
+
+/* ---------- Activate: clean old caches ---------- */
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.map((k) => {
+        if (k !== STATIC_CACHE && k !== API_CACHE) return caches.delete(k);
+      })
+    );
+    await self.clients.claim();
+  })());
+});
+
+/* ---------- Fetch routing ---------- */
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Only handle same-origin requests
+  if (url.origin !== self.location.origin) return;
+
+  // POST to /api/analyze: try network, if offline, queue for retry
+  if (request.method === 'POST' && url.pathname === `${API_PREFIX}analyze`) {
+    event.respondWith(handleOfflineUpload(request));
+    return;
+  }
+
+  if (request.method !== 'GET') return;
+
+  // API GET -> network-first
+  if (url.pathname.startsWith(API_PREFIX)) {
+    event.respondWith(networkFirst(request, API_CACHE));
+    return;
+  }
+
+  // Static assets -> cache-first
+  if (
+    STATIC_ASSETS.includes(url.pathname) ||
+    url.pathname.startsWith('/assets/') || // Vite static
+    url.pathname.startsWith('/static/') // CRA static
+  ) {
+    event.respondWith(cacheFirst(request, STATIC_CACHE));
+    return;
+  }
+
+  // SPA navigation -> network-first with index.html fallback
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(networkFirstNav(request));
+    return;
+  }
+});
+
+/* ---------- Strategies ---------- */
+async function cacheFirst(request, cacheName) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const fresh = await fetch(request);
+    if (fresh && fresh.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, fresh.clone());
+    }
+    return fresh;
+  } catch (err) {
+    // For HTML navigations fallback to shell
+    if (request.headers.get('accept')?.includes('text/html')) {
+      const shell = await caches.match(OFFLINE_HTML_FALLBACK);
+      return shell || new Response('Offline', { status: 503 });
+    }
+    throw err;
+  }
+}
+
+async function networkFirst(request, cacheName) {
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return new Response(JSON.stringify({ error: 'offline', message: 'Network unavailable' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function networkFirstNav(request) {
+  try {
+    return await fetch(request);
+  } catch {
+    // Fall back to cached app shell
+    const shell = await caches.match(OFFLINE_HTML_FALLBACK);
+    return shell || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/html' } });
+  }
+}
+
+/* ---------- Offline POST queue for /api/analyze ---------- */
+async function handleOfflineUpload(request) {
+  try {
+    // Try live first
+    return await fetch(request);
+  } catch {
+    // If offline, queue the file in IndexedDB and respond 202 Accepted
+    const formData = await request.clone().formData();
+    const file = formData.get('file');
+    if (file) {
+      await queueUpload({
+        url: request.url,
+        method: request.method,
+        ts: Date.now(),
+        // We store Blob + filename for retry
+        file,
+        filename: file.name || `upload-${Date.now()}`
+      });
+
+      // Attempt to register a background sync to retry later
+      if (self.registration?.sync) {
+        try { await self.registration.sync.register('ev-analytics-upload-retry'); } catch {}
+      }
+
+      return new Response(JSON.stringify({
+        offline: true,
+        message: 'Stored for processing when back online'
+      }), { status: 202, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    // If no file, fail
+    return new Response(JSON.stringify({ error: 'No file in request' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+/* ---------- Background Sync ---------- */
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'ev-analytics-upload-retry') {
+    event.waitUntil(retryQueuedUploads());
+  }
+});
+
+/* ---------- IndexedDB helpers ---------- */
+const DB_NAME = 'ev-analytics-sync';
+const DB_STORE = 'pending';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onerror = () => reject(req.error);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE, { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+  });
+}
+
+async function queueUpload(record) {
+  const db = await openDB();
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).add(record);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getAllQueued() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function deleteQueued(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).delete(id);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function retryQueuedUploads() {
+  const items = await getAllQueued();
+  for (const item of items) {
+    try {
+      const fd = new FormData();
+      // Recreate File from Blob for good content-disposition:
+      const fileLike = new File([item.file], item.filename || 'upload.csv', { type: item.file.type || 'application/octet-stream' });
+      fd.append('file', fileLike);
+      fd.append('ts', String(item.ts));
+
+      const res = await fetch(item.url, { method: item.method, body: fd });
+      if (res.ok) {
+        await deleteQueued(item.id);
+        // Notify clients
+        const clients = await self.clients.matchAll({ type: 'window' });
+        for (const c of clients) {
+          c.postMessage({ type: 'SYNC_SUCCESS', id: item.id });
+        }
+      }
+    } catch {
+      // keep item for next sync attempt
+    }
+  }
+}
+
+/* ---------- Push (optional) ---------- */
+self.addEventListener('push', (event) => {
+  const body = event.data ? event.data.text() : 'New update available';
+  const options = {
+    body,
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-72x72.png',
+    vibrate: [80, 40, 80],
+    data: { ts: Date.now() },
+    actions: [
+      { action: 'open', title: 'View Analytics', icon: '/icons/action-view.png' },
+      { action: 'dismiss', title: 'Dismiss', icon: '/icons/action-close.png' }
+    ]
+  };
+  event.waitUntil(self.registration.showNotification('EV Analytics', options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  if (event.action === 'open') {
+    event.waitUntil(self.clients.openWindow('/?source=push'));
+  }
+});
+
+/* ---------- Client messages ---------- */
+self.addEventListener('message', (event) => {
+  if (!event.data) return;
+  if (event.data.type === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data.type === 'REGISTER_SYNC' && self.registration?.sync) {
+    self.registration.sync.register('ev-analytics-upload-retry').catch(() => {});
+  }
+});

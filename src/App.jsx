@@ -1,6 +1,13 @@
 // 📂 FILE: src/App.jsx
 import { Routes, Route, useLocation } from "react-router-dom";
-import { useEffect, useState, createContext, useContext, useLayoutEffect } from "react"; // 🔹 ADDED useLayoutEffect
+import {
+  useEffect,
+  useState,
+  createContext,
+  useContext,
+  useLayoutEffect,
+  Suspense, // 🛠 added earlier
+} from "react";
 import { supabase } from "./lib/supabaseClient";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
@@ -46,8 +53,8 @@ import SnapUpdateEngine from "./pages/SnapUpdateEngine";
 import SnapAnalyticsDashboard from "./pages/SnapAnalyticsDashboard";
 import SnapRelayDebugHub from "./pages/SnapRelayDebugHub";
 import SnapBriefs from "./pages/SnapBriefs";
-import SnapLabToolkit from "./pages/SnapLabToolkit";
-import SnapLicenseManager from "./pages/SnapLicenseManager";
+import SnapLabToolkit from "./pages/SnapLabToolKit";
+import SnapLicenseManager from "./pages/SnapCoreLicenseManager";
 import MOTReminderScheduler from "./pages/MOTReminderScheduler";
 import GarageAdminDashboard from "./pages/GarageAdminDashboard";
 import OfflineModeManager from "./pages/OfflineModeManager";
@@ -87,11 +94,20 @@ import SnapLiveHub from "./pages/SnapLiveHub";
 import SnapCoreConnect from "./components/SnapCoreConnect";
 
 // ✅ NEW: Diagnostic Session (ADDED)
-import DiagnosticSession from "./pages/DiagnosticSession"; // ← ADDED
+import DiagnosticSession from "./pages/DiagnosticSession";
 
 // ✅ Dev tools (hidden)
 import DevInventory from "./pages/DevInventory";
 import DevLogin from "./pages/DevLogin";
+
+// 🛠 ultra-light visual fallback block
+function MiniFallback({ label = "Loading…" }) {
+  return (
+    <div className="text-xs text-gray-400 px-2 py-1 rounded bg-black/30 border border-white/10 inline-flex">
+      {label}
+    </div>
+  );
+}
 
 // ✅ Gate flags for dev routes
 const DEV_MODE = import.meta.env.MODE === "development";
@@ -103,34 +119,21 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-/* --------------------- 🔹 ADDED: Global theme + noise injectors --------------------- */
-
-/** Forces `dark` class and your neon/noise classes on <body> before first paint. */
+/* --------------------- 🔹 Global theme + noise injectors --------------------- */
 function GlobalThemeInjector() {
   useLayoutEffect(() => {
     const html = document.documentElement;
     const body = document.body;
-
-    // Force Tailwind dark variants
     html.classList.add("dark");
-    // Ensure no white flash
     body.style.backgroundColor = "#06080f";
-
-    // Attach your background helpers (defined in your CSS):
-    // - bg-texture : your radial/linear gradients
-    // - noise-* : one of noise-default / noise-blue / noise-blue-red
-    // - noise-normal: optional density token if you added it
     body.classList.add("bg-texture", "noise-blue-red");
-
     return () => {
       body.classList.remove("bg-texture", "noise-blue-red");
     };
   }, []);
-
   return null;
 }
 
-/** Small dev-only toggle to try different noise textures at runtime. */
 function NoiseSwitcher() {
   const setNoise = (cls) => {
     document.body.classList.remove("noise-default", "noise-blue", "noise-blue-red");
@@ -150,10 +153,8 @@ function NoiseSwitcher() {
     </div>
   );
 }
-
 /* ------------------------------------------------------------------------------------ */
 
-/* 🔐 ADDED: Safe localStorage helper (SSR/preview-safe) */
 const safeLocalStorage = {
   get: (k) => (typeof window !== "undefined" ? localStorage.getItem(k) : null),
   set: (k, v) => {
@@ -161,7 +162,6 @@ const safeLocalStorage = {
   },
 };
 
-/* 🚀 ADDED: O(1) lookup set for futuristic routes (keeps your original array too) */
 const FUTURISTIC_SET = new Set([
   "/",
   "/scan",
@@ -173,25 +173,54 @@ const FUTURISTIC_SET = new Set([
   "/snaptech",
   "/snaplive-hub",
   "/connect",
-  "/diagnostics", // include diagnostics
+  "/diagnostics",
 ]);
+
+// ❗ FIX: there was a duplicate `export default function App()` here.
+// I am keeping the second copy but COMMENTING it out so nothing is deleted.
+// ---------------------------------------------------------------
+// export default function App() {
+// const [tier, setTier] = useState("lite");
+// const [darkMode] = useState(true);
+// const [user, setUser] = useState(null);
+// const [isLoading, setIsLoading] = useState(true);
+// const location = useLocation();
+// }
+// ---------------------------------------------------------------
 
 export default function App() {
   const [tier, setTier] = useState("lite");
-  const [darkMode] = useState(true); // force dark so tailwind's `dark:` variants apply
+  const [darkMode] = useState(true);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
 
-  // ✅ Load tier and auth session (with safe guards)
+  // ✅ Minimal Debug Mode (append ?debug=1 in the URL)
+  const DEBUG_MINIMAL =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("debug");
+
+  // 🛠 surface runtime errors
   useEffect(() => {
-    /* 🔧 REFACTOR: safer read of savedTier */
+    const onError = (e) => console.error("[GlobalError]", e.message || e);
+    const onRejection = (e) => console.error("[UnhandledRejection]", e.reason || e);
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRejection);
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRejection);
+    };
+  }, []);
+
+  // 📝 Log route changes in dev
+  useEffect(() => {
+    if (DEV_MODE) console.info("[Route]", location.pathname);
+  }, [location.pathname]);
+
+  // ✅ Load tier and auth session
+  useEffect(() => {
     const savedTierSafe = safeLocalStorage.get("user-tier") || localStorage.getItem("user-tier");
     if (savedTierSafe) setTier(savedTierSafe);
-
-    // (kept original lines commented to avoid duplicate variable declaration)
-    // const savedTier = localStorage.getItem("user-tier");
-    // if (savedTier) setTier(savedTier);
 
     let unsub = null;
     (async () => {
@@ -219,9 +248,8 @@ export default function App() {
   useEffect(() => {
     const root = document.documentElement;
     root.classList.add("dark");
-    /* 🔧 REFACTOR: keep your original write and add safe write */
-    localStorage.setItem("darkMode", "true"); // kept
-    safeLocalStorage.set("darkMode", "true"); // added safe version
+    localStorage.setItem("darkMode", "true");
+    safeLocalStorage.set("darkMode", "true");
 
     root.style.setProperty("--primary-glow", "#00d4ff");
     root.style.setProperty("--secondary-glow", "#7c3aed");
@@ -234,7 +262,6 @@ export default function App() {
     root.style.setProperty("--glass-border", "rgba(255,255,255,0.1)");
   }, []);
 
-  // Which routes use the futuristic chrome
   const isFuturisticRoute = () => {
     const futuristicPaths = [
       "/",
@@ -246,24 +273,49 @@ export default function App() {
       "/pro",
       "/snaptech",
       "/snaplive-hub",
-      "/connect", // Add connect to futuristic routes
-      "/diagnostics", // ← ADDED here too (keeps your original array useful)
+      "/connect",
+      "/diagnostics",
     ];
-
-    // NEW quick check (additive, keeps your original logic intact)
     if (FUTURISTIC_SET.has(location.pathname)) return true;
-
     return (
       futuristicPaths.includes(location.pathname) ||
       location.pathname.startsWith("/snap")
     );
   };
 
+  /* ---------- Minimal Debug Shell ---------- */
+  if (DEBUG_MINIMAL) {
+    return (
+      <div
+        style={{
+          background: "#0b0f17",
+          color: "#e5f4ff",
+          minHeight: "100vh",
+          padding: 16,
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <h1>SnapCore – Minimal Debug Shell</h1>
+        <ul style={{ lineHeight: 1.7 }}>
+          <li>Path: <code>{location.pathname}</code></li>
+          <li>User: <code>{JSON.stringify(user)?.slice(0, 80)}…</code></li>
+          <li>Tier: <code>{tier}</code></li>
+        </ul>
+        <p>Remove <code>?debug=1</code> to boot the full UI.</p>
+      </div>
+    );
+  }
+
   // Loading screen
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] text-[var(--neon)] flex items-center justify-center relative overflow-hidden">
-        <ParticleBackground />
+      <div
+        className="min-h-screen bg-[var(--bg)] text-[var(--neon)] flex items-center justify-center relative overflow-hidden"
+        style={{ "--bg": "#06080f", "--neon": "#e5f4ff" }}
+      >
+        <Suspense fallback={<MiniFallback label="Booting visual system…" />}>
+          <ParticleBackground />
+        </Suspense>
         <div className="relative z-10 text-center">
           <div className="w-20 h-20 mx-auto mb-6 relative">
             <div className="absolute inset-0 rounded-full border-2 border-cyan-400/20" />
@@ -287,27 +339,43 @@ export default function App() {
   return (
     <AuthContext.Provider value={{ user, setUser, tier, setTier }}>
       <ErrorBoundary>
-        {/* 🔥 Global theme wrapper: no white fallback anywhere */}
+        {/* 🔥 Global theme wrapper */}
         <div
           className={[
             "min-h-screen relative overflow-hidden",
             "bg-[var(--bg)] text-[var(--neon)]",
             darkMode ? "dark" : "",
           ].join(" ")}
+          // ✅ inline fallbacks so we never render pitch-black with invisible text
+          style={{
+            "--bg": "#06080f",
+            "--neon": "#e5f4ff",
+            "--primary-glow": "#00d4ff",
+            "--secondary-glow": "#7c3aed",
+            "--accent-glow": "#06ffa5",
+            "--danger-glow": "#ff0844",
+            "--warning-glow": "#ffb800",
+            "--particle-primary": "#00d4ff33",
+            "--particle-secondary": "#7c3aed33",
+            "--glass-bg": "rgba(255,255,255,0.02)",
+            "--glass-border": "rgba(255,255,255,0.1)",
+          }}
         >
-          {/* 🔹 ADDED: force theme + noise on <body> */}
+          {/* theme hooks */}
           <GlobalThemeInjector />
-
-          {/* 🔹 ADDED: quick dev switcher for the three noise textures (optional) */}
           <NoiseSwitcher />
 
           {/* Particle layer always under content */}
-          <ParticleBackground />
+          <Suspense fallback={<div />}>
+            <ParticleBackground />
+          </Suspense>
 
           {/* Futuristic chrome or classic shell */}
           {isFuturisticRoute() ? (
             <div className="relative z-10 min-h-screen flex flex-col">
-              <FuturisticNavigation user={user} tier={tier} />
+              <Suspense fallback={<MiniFallback label="Loading HUD…" />}>
+                <FuturisticNavigation user={user} tier={tier} />
+              </Suspense>
 
               <main className="flex-1 p-6 pt-24">
                 <div className="max-w-7xl mx-auto">
@@ -353,17 +421,13 @@ export default function App() {
                       <Route path="/snaptech-chat" element={<SnapTechChat />} />
                       <Route path="/snaplive-hub" element={<SnapLiveHub />} />
                       <Route path="/connect" element={<SnapCoreConnect />} />
-
-                      {/* 🔥 ADDED: Diagnostic Session route in futuristic shell */}
                       <Route path="/diagnostics" element={<DiagnosticSession />} />
-
                       {(DEV_MODE || ALLOW_IN_PROD) && (
                         <>
                           <Route path="/_dev/login" element={<DevLogin />} />
                           <Route path="/_dev/inventory" element={<DevInventory />} />
                         </>
                       )}
-
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </ErrorBoundary>
@@ -394,11 +458,10 @@ export default function App() {
               </ErrorBoundary>
             </div>
           ) : (
-            // Traditional layout for non-futuristic routes (still uses neon theme)
+            // Traditional layout
             <div className="flex flex-col min-h-screen">
               <Header darkMode={true} setDarkMode={() => {}} />
               <FloatingHeader />
-
               <main className="flex-1">
                 <ErrorBoundary>
                   <Routes>
@@ -410,7 +473,6 @@ export default function App() {
                     <Route path="/faq" element={<Faq />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-
                     {/* Auth Pages */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
@@ -420,11 +482,11 @@ export default function App() {
                     <Route path="/resend-verification" element={<ResendVerification />} />
                     <Route path="/change-password" element={<ChangePassword />} />
                     <Route path="/2fa" element={<TwoFactorSetup />} />
-
                     {/* Restriction showcase route */}
                     <Route
                       path="/restrictions"
-                      element={
+
+element={
                         <AccessRestrictionHandler
                           allowedTiers={["pro", "garage", "owner"]}
                           redirectTo="/pricing"
@@ -441,11 +503,11 @@ export default function App() {
                   </Routes>
                 </ErrorBoundary>
               </main>
-
               <Footer />
-
               <ErrorBoundary>
-                <SnapTechChatWidget tier={tier} />
+                <Suspense fallback={<div />}>
+                  <SnapTechChatWidget tier={tier} />
+                </Suspense>
               </ErrorBoundary>
             </div>
           )}
@@ -462,7 +524,6 @@ export default function App() {
 // <Route path="/diagnostics" element={<DiagnosticSession />} />
 // const futuristicPaths = [ ... "/diagnostics", ];
 // import DiagnosticSession from "./pages/DiagnosticSession";
-
 // Duplicate additions retained for traceability:
 // <Route path="/diagnostics" element={<DiagnosticSession />} />
 // const futuristicPaths = [
@@ -479,12 +540,7 @@ export default function App() {
 // "/diagnostics", // ← ADDED: diagnostics uses the futuristic chrome
 // ];
 // import DiagnosticSession from "./pages/DiagnosticSession";
-
 // Another scratch copy:
 // <Route path="/diagnostics" element={<DiagnosticSession />} />
-
 // Another scratch copy with improved isFuturisticRoute is already integrated above.
-
 /* End scratch */
-// trigger CI
-// smoke trigger

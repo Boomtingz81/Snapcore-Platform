@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Prefer description early for SEO/snippets -->
+    <meta
+      name="description"
+      content="Snapcore Platform — diagnostics, analytics, and AI tooling."
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- PWA: manifest + theme color (match your app theme) -->
+    <meta name="theme-color" content="#06080f" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- iOS PWA hints -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <title>snapcore_platform</title>
+
+    <!-- Reduce white flash before React mounts -->
+    <style>
+      html, body, #root { height: 100%; }
+      body { margin: 0; background: #06080f; color: #fff; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Vite entry -->
+    <script type="module" src="/src/main.jsx"></script>
+
+    <noscript>
+      <p style="color:#ccc; padding:16px">
+        JavaScript is required to run this application.
+      </p>
+    </noscript>
+  </body>
+</html>
