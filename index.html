@@ -1,0 +1,358 @@
+<!-- FILE: /public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>SnapFaultCore</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/public/manifest.json" />
+  <meta name="theme-color" content="#ff4444" />
+  <link rel="apple-touch-icon" href="/icons/snapfaultcore-192.png" />
+
+  <style>
+    /* ---------- Base ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #0a1420;
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ---------- Background ---------- */
+    .particle-background {
+      position: fixed; inset: 0; z-index: -1000;
+      background:
+        radial-gradient(ellipse at 30% 40%, rgba(0,100,150,.03) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 60%, rgba(0,80,120,.02) 0%, transparent 50%),
+        #0a1420;
+    }
+    .floating-particles { position: fixed; inset: 0; z-index: -999; overflow: hidden; }
+
+    .particle {
+      position: absolute; width: 2px; height: 2px;
+      background: #00ffaa; border-radius: 50%; opacity: .8;
+      animation: particleFloat 20s linear infinite;
+      box-shadow: 0 0 4px rgba(0,255,170,.6);
+      will-change: transform, opacity;
+    }
+    .particle.medium { width: 3px; height: 3px; opacity: .6; animation-duration: 25s; }
+    .particle.large { width: 4px; height: 4px; background: #66ffcc; opacity: .45; animation-duration: 30s; box-shadow: 0 0 6px rgba(102,255,204,.4); }
+
+    @keyframes particleFloat {
+      0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
+      8% { opacity: .8; }
+      92% { opacity: .8; }
+      100% { transform: translateY(-22vh) translateX(30px) rotate(180deg); opacity: 0; }
+    }
+
+    /* Reduced motion respect */
+    @media (prefers-reduced-motion: reduce) {
+      .particle, .main-title, .welcome-title, .status-dot { animation: none !important; }
+    }
+
+    /* ---------- Skip link ---------- */
+    .skip-link {
+      position: absolute; top: 12px; left: 12px; z-index: 1000;
+      background: rgba(0,0,0,.7); color: #fff;
+      padding: .5rem .8rem; border: 1px solid rgba(255,255,255,.2);
+      border-radius: 8px; font-size: 14px; text-decoration: none;
+      opacity: .9;
+    }
+    .skip-link:focus { outline: 2px solid #00ffaa; outline-offset: 3px; }
+
+    /* ---------- Layout ---------- */
+    .main-container {
+      min-height: 100vh; padding: 40px;
+      display: grid; place-items: center;
+      position: relative;
+    }
+    .content-wrap {
+      width: min(1200px, 100%);
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 40px;
+    }
+
+    /* ---------- Titles ---------- */
+    .main-title {
+      font-size: clamp(2.6rem, 6vw, 5.2rem);
+      font-weight: 400; letter-spacing: 1px; text-align: center;
+      color: #ff4444;
+      text-shadow:
+        0 0 10px rgba(255,68,68,.8),
+        0 0 20px rgba(255,68,68,.6),
+        0 0 30px rgba(255,68,68,.4);
+      margin: 0 0 10px;
+      animation: mainTitleGlow 3s ease-in-out infinite alternate;
+    }
+    @keyframes mainTitleGlow {
+      0% {
+        text-shadow:
+          0 0 10px rgba(255,68,68,.8),
+          0 0 20px rgba(255,68,68,.6),
+          0 0 30px rgba(255,68,68,.4);
+      }
+      100% {
+        text-shadow:
+          0 0 15px rgba(255,68,68,1),
+          0 0 25px rgba(255,68,68,.8),
+          0 0 35px rgba(255,68,68,.6);
+      }
+    }
+    .powered-by {
+      font-size: 1rem; text-align: center; opacity: .9; font-weight: 300; margin: 0 0 30px;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .left-sidebar {
+      display: grid; gap: 30px; align-content: start;
+    }
+    .sidebar-section {
+      background: rgba(15,25,40,.4); border: 1px solid rgba(0,255,170,.2);
+      border-radius: 12px; padding: 18px; backdrop-filter: blur(10px);
+    }
+    .section-title {
+      color: #00ffaa; font-size: 16px; font-weight: 600; margin-bottom: 14px;
+    }
+    .menu-item {
+      display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 12px;
+      padding: 12px; margin-bottom: 8px;
+      background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.05);
+      border-radius: 8px; color: rgba(255,255,255,.85); text-decoration: none; font-size: 15px;
+      transition: transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+    }
+    .menu-item:hover {
+      background: rgba(0,255,170,.08); border-color: rgba(0,255,170,.28); color: #00ffaa;
+      transform: translateX(4px);
+    }
+    .menu-icon { font-size: 18px; text-align: center; }
+
+    /* ---------- Right content ---------- */
+    .right-content { display: grid; gap: 40px; align-content: start; }
+    .top-navigation {
+      display: grid; grid-auto-flow: column; gap: 8px; align-items: center;
+      background: rgba(15,25,40,.4); border: 1px solid rgba(0,255,170,.2);
+      border-radius: 12px; padding: 10px; backdrop-filter: blur(10px);
+    }
+    .nav-button {
+      display: inline-grid; grid-auto-flow: column; gap: 8px; place-content: center;
+      padding: 10px 16px; min-width: 90px;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px; color: rgba(255,255,255,.85); text-decoration: none;
+      transition: transform .15s ease, background .2s ease, border-color .2s ease, color .2s ease;
+    }
+    .nav-button:hover { background: rgba(0,255,170,.1); border-color: rgba(0,255,170,.26); color: #00ffaa; }
+    .nav-button.active { background: rgba(0,255,170,.12); border-color: rgba(0,255,170,.3); color: #00ffaa; }
+
+    .welcome-title {
+      font-size: clamp(2rem, 4.5vw, 3.6rem); font-weight: 300; margin: 0 0 10px; text-align: center;
+      color: #ff4444;
+      text-shadow: 0 0 15px rgba(255,68,68,.8), 0 0 25px rgba(255,68,68,.5);
+      animation: welcomeGlow 4s ease-in-out infinite alternate;
+    }
+    @keyframes welcomeGlow {
+      0% { text-shadow: 0 0 15px rgba(255,68,68,.8), 0 0 25px rgba(255,68,68,.5); }
+      100% { text-shadow: 0 0 20px rgba(255,68,68,1), 0 0 30px rgba(255,68,68,.7); }
+    }
+    .welcome-subtitle { text-align: center; font-size: 1.25rem; font-weight: 300; margin: 0 0 24px; }
+
+    .status-indicator {
+      display: inline-grid; grid-auto-flow: column; gap: 10px; align-items: center;
+      padding: 12px 20px; border-radius: 25px;
+      background: rgba(0,255,170,.08); border: 1px solid rgba(0,255,170,.3);
+      margin-inline: auto;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #00ff66;
+      box-shadow: 0 0 8px rgba(0,255,102,.6);
+      animation: statusPulse 2s ease-in-out infinite;
+    }
+    @keyframes statusPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: .78; }
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1024px) {
+      .content-wrap { grid-template-columns: 1fr; }
+      .left-sidebar { order: 2; }
+      .right-content { order: 1; }
+    }
+    @media (max-width: 680px) {
+      .top-navigation { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .nav-button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background -->
+  <div class="particle-background" aria-hidden="true"></div>
+  <div class="floating-particles" id="particleContainer" aria-hidden="true"></div>
+
+  <!-- Accessibility -->
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <!-- Main -->
+  <main class="main-container" id="main-content">
+    <header style="text-align:center; margin-bottom: 10px;">
+      <h1 class="main-title">SnapFaultCore</h1>
+      <p class="powered-by" aria-label="Powered by">Powered by SnapCore AI Systems Ltd</p>
+    </header>
+
+    <section class="content-wrap" aria-label="Home layout">
+      <!-- Sidebar -->
+      <aside class="left-sidebar" aria-label="SnapCore menus">
+        <div class="sidebar-section">
+          <h2 class="section-title">SnapCore Tools</h2>
+          <a href="#" class="menu-item"><span class="menu-icon">⚡</span><span>SnapTech</span></a>
+          <a href="#" class="menu-item"><span class="menu-icon">👤</span><span>SnapPro</span></a>
+          <a href="#" class="menu-item"><span class="menu-icon">📺</span><span>History</span></a>
+        </div>
+
+        <div class="sidebar-section">
+          <h2 class="section-title">Diagnostic Tools</h2>
+          <a href="#" class="menu-item"><span class="menu-icon">🔍</span><span>VIN Decoder</span></a>
+          <a href="#" class="menu-item"><span class="menu-icon">➰</span><span>Plate Scanner</span></a>
+          <a href="#" class="menu-item"><span class="menu-icon">⚠️</span><span>SnapDNA</span></a>
+          <a href="#" class="menu-item"><span class="menu-icon">👤</span><span>Lab Tools</span></a>
+        </div>
+      </aside>
+
+      <!-- Right -->
+      <div class="right-content">
+        <nav class="top-navigation" aria-label="Primary">
+          <a href="#" class="nav-button active" aria-current="page"><span>🏠</span><span>Home</span></a>
+          <a href="#" class="nav-button"><span>🔍</span><span>Scan</span></a>
+          <a href="#" class="nav-button"><span>▶️</span><span>Live</span></a>
+          <a href="#" class="nav-button"><span>📈</span><span>Analytics</span></a>
+          <a href="#" class="nav-button"><span>💻</span><span>Terminal</span></a>
+        </nav>
+
+        <section aria-labelledby="welcome-title">
+          <h2 class="welcome-title" id="welcome-title">Welcome to SnapFaultCore</h2>
+          <p class="welcome-subtitle">Professional Automotive Diagnostic Platform</p>
+          <div class="status-indicator" role="status" aria-live="polite">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span class="status-text">All Systems Online</span>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* ---------- Service Worker (deduped, robust) ---------- */
+    (function registerSW() {
+      const SW_URL = '/public/service-worker.js';
+      if (!('serviceWorker' in navigator)) return;
+
+      window.addEventListener('load', async () => {
+        try {
+          const reg = await navigator.serviceWorker.register(SW_URL);
+          // Auto-activate fresh worker
+          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          reg.addEventListener('updatefound', () => {
+            const sw = reg.installing;
+            if (!sw) return;
+            sw.addEventListener('statechange', () => {
+              if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+                reg.waiting?.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            // Optional: uncomment to auto-reload on new shell
+            // location.reload();
+          });
+        } catch (err) {
+          console.log('[SW] registration failed', err);
+        }
+      });
+
+      // A2HS hook
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // show your custom "Install" UI and call:
+        // await deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null;
+      });
+    })();
+
+    /* ---------- Particle System (paused when hidden) ---------- */
+    class ParticleSystem {
+      constructor() {
+        this.container = document.getElementById('particleContainer');
+        this.particles = [];
+        this.maxParticles = 60;
+        this.addTimer = null;
+        this.cleanTimer = null;
+        this.running = true;
+        this.init();
+      }
+      init() {
+        for (let i = 0; i < 35; i++) setTimeout(() => this.addParticle(), i * 120);
+        this.schedule();
+        document.addEventListener('visibilitychange', () => {
+          this.running = document.visibilityState === 'visible';
+          this.running ? this.schedule() : this.unschedule();
+        }, { passive: true });
+      }
+      schedule() {
+        this.unschedule();
+        this.addTimer = setInterval(() => this.running && this.addParticle(), 320);
+        this.cleanTimer = setInterval(() => this.running && this.cleanup(), 1500);
+      }
+      unschedule() {
+        if (this.addTimer) clearInterval(this.addTimer);
+        if (this.cleanTimer) clearInterval(this.cleanTimer);
+      }
+      addParticle() {
+        if (this.particles.length >= this.maxParticles) return;
+        const el = document.createElement('div');
+        const r = Math.random();
+        el.className = r < 0.4 ? 'particle' : r < 0.7 ? 'particle medium' : 'particle large';
+        el.style.left = Math.random() * 100 + '%';
+        el.style.animationDelay = (Math.random() * 5).toFixed(2) + 's';
+        el.style.animationDuration = (18 + Math.random() * 12).toFixed(2) + 's';
+
+this.container.appendChild(el);
+        this.particles.push(el);
+      }
+      cleanup() {
+        this.particles = this.particles.filter(p => {
+          if (!this.container.contains(p)) return false;
+          const rect = p.getBoundingClientRect();
+          if (rect.bottom < -60) { p.remove(); return false; }
+          return true;
+        });
+      }
+    }
+    new ParticleSystem();
+
+    /* ---------- Small interactions ---------- */
+    document.querySelectorAll('.nav-button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }, { passive: false });
+    });
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        item.style.transform = 'translateX(8px) scale(.98)';
+        setTimeout(() => item.style.transform = '', 140);
+      }, { passive: false });
+    });
+  </script>
+</body>
+</html>
