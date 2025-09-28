@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+LIST=${1:-expected_files.txt}
+miss=0
+while IFS= read -r name; do
+  [[ -z "${name// }" || "${name:0:1}" == "#" ]] && continue
+  hits=$(find . ./snapcore-python ./snapcore-platform -type f -iname "$name" 2>/dev/null || true)
+  if [[ -n "$hits" ]]; then
+    echo "FOUND: $name"; echo "$hits" | sed 's/^/ - /'; echo
+  else
+    echo "MISSING: $name"; echo; miss=$((miss+1))
+  fi
+done < "$LIST"
+[[ $miss -gt 0 ]] && echo "==> $miss file(s) missing" && exit 1 || echo "==> All listed files found"

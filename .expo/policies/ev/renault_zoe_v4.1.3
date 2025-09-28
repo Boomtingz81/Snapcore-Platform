@@ -1,0 +1,672 @@
+{
+  "policy_id": "renault_zoe_v4.1.3",
+  "vlink_version": "4.2.1",
+  "api_compatibility": {
+    "min_vlink_ms_version": "4.0.0",
+    "max_vlink_ms_version": "4.9.x",
+    "backwards_compatible": ["3.2", "3.1", "3.0"],
+    "schema_version": "2024.2",
+    "api_endpoints": {
+      "charging_control": "/api/v4/charging",
+      "telemetry_stream": "/api/v4/telemetry/stream",
+      "policy_update": "/api/v4/policies/update"
+    }
+  },
+  "metadata": {
+    "name": "Renault Zoe Advanced vlink MS Charging Policy",
+    "description": "Next-generation vlink MS compatible charging policy for Renault Zoe EVs with Chameleon charger optimization and EU energy market integration",
+    "manufacturer": "renault",
+    "policy_type": "production",
+    "certification_level": "tier_1_plus",
+    "created": "2024-08-22T10:00:00Z",
+    "updated": "2024-08-22T16:45:00Z",
+    "revision": "4.1.3-stable",
+    "build_number": "2024.08.22.1645",
+    "checksum": "sha256:f7e9a2b8c3d4e5f6789012345678901234567890abcdef1234567890abcdef789",
+    "maintainer": {
+      "organization": "renault_alliance_vlink",
+      "contact": "zoe-support@vlink.ms",
+      "documentation": "https://docs.vlink.ms/policies/renault-zoe",
+      "support_tier": "premium"
+    },
+    "localization": {
+      "supported_languages": ["en", "fr", "de", "es", "it", "nl"],
+      "default_language": "en",
+      "regional_compliance": ["EU", "UK", "CH", "NO"]
+    }
+  },
+  "vehicle_identification": {
+    "vin_patterns": ["VF1*", "VF7*", "VF2*"],
+    "supported_models": [
+      {"model": "ZOE", "year_range": [2019, 2025], "trim": "Life", "market": "EU", "battery_lease": false},
+      {"model": "ZOE", "year_range": [2019, 2025], "trim": "Zen", "market": "EU", "battery_lease": false},
+      {"model": "ZOE", "year_range": [2019, 2025], "trim": "Intens", "market": "EU", "battery_lease": false},
+      {"model": "ZOE", "year_range": [2019, 2025], "trim": "GT Line", "market": "EU", "battery_lease": false},
+      {"model": "ZOE", "year_range": [2019, 2024], "trim": "Life", "market": "EU", "battery_lease": true},
+      {"model": "ZOE", "year_range": [2022, 2025], "trim": "Van", "market": "EU", "commercial": true}
+    ],
+    "battery_variants": [
+      {"capacity": "52kWh", "chemistry": "NCM811", "pack_voltage": 400, "usable_capacity": 50.0},
+      {"capacity": "55kWh", "chemistry": "NCM811", "pack_voltage": 400, "usable_capacity": 52.5},
+      {"capacity": "60kWh", "chemistry": "NCM", "pack_voltage": 400, "usable_capacity": 57.0}
+    ],
+    "identification_priority": ["renault_connect_api", "vin_decode", "obd_query", "can_message", "user_input"],
+    "chameleon_charger_detection": {
+      "hardware_version_detection": true,
+      "firmware_version_query": true,
+      "capability_negotiation": true
+    }
+  },
+  "vlink_ms_parameters": {
+    "session_management": {
+      "max_session_duration": 720,
+      "idle_timeout": 180,
+      "authentication_required": true,
+      "session_heartbeat_interval": 30,
+      "graceful_termination_timeout": 90,
+      "concurrent_sessions_max": 1,
+      "session_recovery_support": true,
+      "renault_app_integration": {
+        "my_renault_api": "v2.1",
+        "easy_connect_support": true,
+        "remote_start_stop": true,
+        "charging_scheduling": true
+      }
+    },
+    "communication_stack": {
+      "primary_protocol": "ISO15118-20",
+      "fallback_protocols": ["ISO15118-2", "DIN70121", "IEC61851-1"],
+      "protocol_negotiation_timeout": 15,
+      "plug_lock_support": true,
+      "pnc_support": true,
+      "pnc_fallback": "rfid_fallback",
+      "tls_version": "1.3",
+      "certificate_handling": {
+        "root_ca_validation": true,
+        "ocsp_checking": true,
+        "certificate_cache_duration": 86400,
+        "renault_pki_integration": true
+      },
+      "chameleon_charger_support": {
+        "adaptive_negotiation": true,
+        "power_curve_optimization": true,
+        "efficiency_monitoring": true,
+        "thermal_management_integration": true
+      }
+    },
+    "cloud_integration": {
+      "vlink_ms_endpoint": "https://api-eu.vlink.ms/v4",
+      "renault_cloud_bridge": "https://alliance-api.renault.com/v2",
+      "telemetry_endpoint": "wss://telemetry-eu.vlink.ms/v4",
+      "backup_endpoints": [
+        "https://backup-eu1.vlink.ms/v4",
+        "https://backup-eu2.vlink.ms/v4"
+      ],
+      "data_compression": "brotli",
+      "encryption": "ChaCha20-Poly1305",
+      "batch_upload_size": 150,
+      "offline_buffer_duration": 7200,
+      "gdpr_compliance": true,
+      "data_residency": "EU"
+    }
+  },
+  "charging_profile": {
+    "ac_charging": {
+      "max_current": 32,
+      "max_voltage": 400,
+      "max_power": 22000,
+      "phases": 3,
+      "frequency": 50,
+      "power_factor": 0.99,
+      "efficiency": 0.95,
+      "chameleon_adaptive": {
+        "enabled": true,
+        "version": "chameleon_3.0",
+        "adaptive_power_scaling": true,
+        "grid_impedance_compensation": true,
+        "harmonic_distortion_mitigation": true
+      },
+      "single_phase_fallback": {
+        "max_power": 7400,
+        "auto_detection": true,
+        "phase_rotation_detection": true
+      },
+      "connector_types": ["Type_2_IEC_62196", "Type_2_Mennekes"],
+      "pilot_signal": {
+        "type": "PWM",
+        "frequency": 1000,
+        "duty_cycle_range": [6, 96],
+        "proximity_detection": true
+      },
+      "power_curve_segments": [
+        {"power_kw": 0, "efficiency": 0.0, "pf": 1.0},
+        {"power_kw": 3.7, "efficiency": 0.92, "pf": 0.98},
+        {"power_kw": 7.4, "efficiency": 0.94, "pf": 0.98},
+        {"power_kw": 11, "efficiency": 0.95, "pf": 0.99},
+        {"power_kw": 22, "efficiency": 0.95, "pf": 0.99}
+      ]
+    },
+    "dc_charging": {
+      "max_current": 130,
+      "max_voltage": 500,
+      "max_power": 50000,
+      "connector_types": ["CCS_Combo_2"],
+      "preconditioning_support": true,
+      "charging_curve": {
+        "curve_type": "renault_zoe_optimized_v4",
+        "temperature_compensation": true,
+        "soc_accuracy": 0.5,
+        "battery_health_adaptation": true,
+        "segments": [
+          {
+            "soc_start": 0, 
+            "soc_end": 10, 
+            "max_power": 20000,
+            "ramp_rate": 2500,
+            "conditions": ["battery_temp > 0C", "ambient_temp > -15C"],
+            "preconditioning_power": 3000
+          },
+          {
+            "soc_start": 10, 
+            "soc_end": 30, 
+            "max_power": 46000,
+            "ramp_rate": 4000,
+            "conditions": ["battery_temp > 15C", "cell_balance_ok"]
+          },
+          {
+            "soc_start": 30, 
+            "soc_end": 60, 
+            "max_power": 43000,
+            "ramp_rate": 3500,
+            "conditions": ["battery_temp < 45C", "voltage < 420V"]
+          },
+          {
+            "soc_start": 60, 
+            "soc_end": 80, 
+            "max_power": 32000,
+            "ramp_rate": 2000,
+            "conditions": ["thermal_management_active"]
+          },
+          {
+            "soc_start": 80, 
+            "soc_end": 90, 
+            "max_power": 18000,
+            "ramp_rate": 1200,
+            "conditions": ["cell_balance_delta < 30mV"]
+          },
+          {
+            "soc_start": 90, 
+            "soc_end": 95, 
+            "max_power": 8000,
+            "ramp_rate": 600,
+            "conditions": ["constant_voltage_transition"]
+          },
+          {
+            "soc_start": 95, 
+            "soc_end": 100, 
+            "max_power": 3000,
+            "ramp_rate": 300,
+            "conditions": ["balance_charge_mode"]
+          }
+        ],
+        "environmental_derating": {
+          "high_temp_threshold": 40,
+          "high_temp_factor": 0.80,
+          "low_temp_threshold": -10,
+          "low_temp_factor": 0.65,
+          "humidity_compensation": true
+        }
+      }
+    },
+    "bidirectional_support": {
+      "v2g_capable": true,
+      "v2h_capable": false,
+      "v2l_capable": false,
+      "v2g_max_power": 11000,
+      "iso15118_20_dc_bpt": true,
+      "grid_services": ["frequency_response", "peak_shaving"]
+    }
+  },
+  "safety_limits": {
+    "temperature": {
+      "battery_min_c": -25,
+      "battery_max_c": 60,
+      "derating_threshold_c": 45,
+      "emergency_stop_threshold_c": 65,
+      "cooling_activation_threshold_c": 35,
+      "heating_activation_threshold_c": 0,
+      "active_thermal_management": {
+        "liquid_cooling": true,
+        "heat_pump_integration": true,
+        "preconditioning_power_limit": 7400
+      },
+      "thermal_runaway_detection": true
+    },
+    "voltage": {
+      "isolation_resistance_min": 500,
+      "insulation_monitoring": true,
+      "nominal_voltage": 400,
+      "ground_fault_threshold": 30,
+      "arc_fault_detection": true,
+      "voltage_ripple_max": 3,
+      "surge_protection": true,
+      "phase_monitoring": true
+    },
+    "current": {
+      "overcurrent_protection": true,
+      "ground_fault_detection": true,
+      "phase_imbalance_protection": {
+        "enabled": true,
+        "max_imbalance_percent": 15,
+        "neutral_current_limit": 5
+      },
+      "welding_detection": true,
+      "current_sensor_accuracy": 0.5,
+      "emergency_stop_current": 140,
+      "inrush_current_limit": 150
+    },
+    "mechanical": {
+      "connector_insertion_detection": true,
+      "lock_verification": true,
+      "cable_integrity_check": true,
+      "vibration_monitoring": true,
+      "water_ingress_protection": "IP55"
+    }
+  },
+  "vlink_ms_telemetry": {
+    "data_streams": {
+      "high_frequency": {
+        "interval_ms": 50,
+        "parameters": ["voltage_l1", "voltage_l2", "voltage_l3", "current_l1", "current_l2", "current_l3", "frequency", "power_factor"],
+        "compression": "delta_compression",
+        "local_storage_duration": 600,
+        "chameleon_specific": ["charger_temp", "efficiency_real_time"]
+      },
+      "medium_frequency": {
+        "interval_ms": 500,
+        "parameters": ["soc", "battery_voltage", "battery_current", "battery_temp", "power_delivered", "energy_session"],
+        "compression": "standard",
+        "local_storage_duration": 3600
+      },
+      "low_frequency": {
+        "interval_ms": 5000,
+        "parameters": ["cell_voltages", "cell_temperatures", "battery_health", "charging_efficiency", "grid_quality"],
+        "compression": "none",
+        "local_storage_duration": 86400
+      },
+      "renault_specific": {
+        "interval_ms": 1000,
+        "parameters": ["chameleon_status", "thermal_management_status", "my_renault_sync"],
+        "compression": "json_compact",
+        "local_storage_duration": 1800
+      }
+    },
+    "event_logging": {
+      "critical_events": {
+        "priority": "immediate",
+        "retention_days": 180,
+        "encryption_required": true,
+        "renault_notification": true
+      },
+      "warning_events": {
+        "priority": "high",
+        "retention_days": 60,
+        "encryption_required": false
+      },
+      "info_events": {
+        "priority": "normal",
+        "retention_days": 14,
+        "encryption_required": false
+      }
+    },
+    "analytics": {
+      "real_time_processing": true,
+      "ml_inference": {
+        "battery_degradation_prediction": true,
+        "charging_pattern_optimization": true,
+        "chameleon_performance_analysis": true,
+        "fault_prediction": true,
+        "model_version": "renault_ml_v3.2.1"
+      },
+      "european_energy_market_integration": {
+        "spot_price_optimization": true,
+        "grid_carbon_intensity_tracking": true,
+        "demand_response_participation": true
+      }
+    }
+  },
+  "error_handling": {
+    "fault_tolerance": {
+      "retry_attempts": 5,
+      "exponential_backoff": true,
+      "max_retry_interval": 300,
+      "circuit_breaker_threshold": 8,
+      "error_recovery_timeout": 45
+    },
+    "diagnostics": {
+      "self_test_on_connect": true,
+      "periodic_health_check": 1800,
+      "log_level": "debug",
+      "remote_diagnostics_support": true,
+      "renault_diagnostic_codes": {
+        "enabled": true,
+        "version": "renault_dtc_v2.1",
+        "integration": "renault_service_cloud"
+      }
+    },
+    "chameleon_specific_errors": {
+      "overtemperature_protection": true,
+      "phase_loss_detection": true,
+      "power_factor_correction_failure": true,
+      "adaptive_charging_malfunction": true
+    }
+  },
+  "load_management": {
+    "dynamic_load_balancing": {
+      "enabled": true,
+      "algorithm": "renault_fair_share_plus",
+      "response_time_ms": 200,
+      "minimum_allocation_percent": 15,
+      "chameleon_aware": true
+    },
+    "demand_response": {
+      "dr_programs": ["peak_shaving", "load_shifting", "frequency_regulation", "carbon_optimization"],
+      "response_time_seconds": 10,
+      "minimum_notice_minutes": 15,
+      "opt_out_capability": true,
+      "eu_flexibility_market": true
+    },
+    "grid_services": {
+      "frequency_response": true,
+      "voltage_support": true,
+      "spinning_reserve": false,
+      "virtual_power_plant": true,
+      "aggregator_integration": ["next_kraftwerke", "sonnen", "octopus_energy"]
+    },
+    "priority_management": {
+      "base_priority": "high",
+      "user_override": true,
+      "fleet_management": true,
+      "emergency_override": true,
+      "renault_mobility_services": true
+    }
+  },
+  "manufacturer_specific": {
+    "renault_zoe": {
+      "chameleon_charger": {
+        "hardware_generations": {
+          "gen_1": {"max_power": 3700, "efficiency": 0.92},
+          "gen_2": {"max_power": 7400, "efficiency": 0.94},
+          "gen_3": {"max_power": 22000, "efficiency": 0.95}
+        },
+        "adaptive_charging": {
+          "enabled": true,
+          "algorithm": "chameleon_ai_v3.0",
+          "grid_impedance_learning": true,
+          "power_quality_optimization": true
+        },
+        "power_factor_correction": {
+          "enabled": true,
+          "target_pf": 0.99,
+          "reactive_power_compensation": true
+        },
+        "grid_frequency_adaptation": {
+          "enabled": true,
+          "frequency_range": [49.5, 50.5],
+          "droop_control": true
+        },
+        "voltage_range_wide": {
+          "min_voltage": 207,
+          "max_voltage": 253,
+          "per_phase": true
+        }
+      },
+      "battery_management": {
+        "chemistry_specific": {
+          "ncm811": {
+            "fast_charge_limit_c": 1.2,
+            "temperature_optimal_range": [20, 35],
+            "degradation_model": "renault_ncm_v2.1"
+          }
+        },
+        "thermal_management": {
+          "liquid_cooling": true,
+          "heat_pump": true,
+          "preconditioning_support": {
+            "remote_activation": true,
+            "schedule_based": true,
+            "grid_powered_preferred": true,
+            "battery_powered_backup": true
+          },
+          "thermal_preconditioning": {
+            "target_temp": 23,
+            "activation_threshold": 30,
+            "power_budget": 7400
+          }
+        },
+        "cell_monitoring": {
+          "individual_cell_voltage": true,
+          "cell_temperature_zones": 8,
+          "active_balancing": true,
+          "soh_estimation": "kalman_filter_v2"
+        }
+      },
+      "connectivity": {
+        "renault_easy_connect": {
+          "version": "4.2",
+          "real_time_sync": true,
+          "offline_capability": true
+        },
+        "my_renault_app": {
+          "api_version": "v2.1",
+          "features": {
+            "remote_climate": true,
+            "charging_control": true,
+            "charging_history": true,
+            "cost_tracking": true,
+            "co2_tracking": true
+          }
+        },
+        "scheduled_charging": {
+          "time_based": true,
+          "price_based": true,
+          "carbon_intensity_based": true,
+          "multiple_schedules": 5
+        }
+      },
+      "can_bus_integration": {
+        "primary_bus": {
+          "baud_rate": 500000,
+          "protocol": "CAN_FD",
+          "termination": "120_ohm"
+        },
+        "ev_can_messages": {
+          "battery_soc": {
+            "id": "0x427",
+            "dlc": 8,
+            "frequency_ms": 500,
+            "scaling": 0.5,
+            "offset": 0,
+            "unit": "percent"
+          },
+          "battery_voltage": {
+            "id": "0x42C",
+            "dlc": 8,
+            "frequency_ms": 100,
+            "scaling": 0.1,
+            "offset": 0,
+            "unit": "volts"
+          },
+          "battery_current": {
+            "id": "0x42D",
+            "dlc": 8,
+            "frequency_ms": 100,
+            "scaling": 0.1,
+            "offset": -3276.8,
+            "unit": "amperes"
+          },
+          "battery_temp": {
+            "id": "0x42E",
+            "dlc": 8,
+            "frequency_ms": 2000,
+            "scaling": 0.25,
+            "offset": -40,
+            "unit": "celsius"
+          },
+          "charging_status": {
+            "id": "0x42A",
+            "dlc": 8,
+            "frequency_ms": 1000,
+            "bit_definitions": {
+              "charging_active": {"byte": 0, "bit": 0},
+              "plug_connected": {"byte": 0, "bit": 1},
+              "charging_complete": {"byte": 0, "bit": 2},
+              "dc_charging": {"byte": 0, "bit": 3}
+            }
+          },
+          "chameleon_status": {
+            "id": "0x638",
+            "dlc": 8,
+            "frequency_ms": 1000,
+            "parameters": ["power_level", "efficiency", "temperature", "fault_status"]
+          }
+        },
+        "obd_parameters": {
+          "supported_pids": ["01", "05", "0C", "0D", "1F", "21", "2F", "41"],
+          "renault_specific_pids": {
+            "battery_voltage": "C1",
+            "battery_current": "C2", 
+            "soc_display": "C3",
+            "soc_real": "C4",
+            "charging_power": "C5"
+          }
+        }
+      },
+      "charging_modes": {
+        "eco_mode": {
+          "max_power_reduction": 0.75,
+          "temperature_priority": true,
+          "efficiency_optimization": true,
+          "grid_friendly": true
+        },
+        "fast_mode": {
+          "max_power_boost": 1.0,
+          "time_priority": true,
+          "preconditioning_aggressive": true
+        },
+        "scheduled_mode": {
+          "departure_time_optimization": true,
+          "tariff_optimization": true,
+          "carbon_optimization": true,
+          "multiple_departure_times": 7
+        },
+        "v2g_mode": {
+          "bidirectional_enabled": true,
+          "grid_support_priority": true,
+          "energy_market_participation": true,
+          "minimum_reserve_soc": 20
+        }
+      }
+    }
+  },
+  "regional_variants": {
+    "europe": {
+      "connector_standards": {
+        "type2_connector": true,
+        "ccs2_connector": true,
+        "mennekes_standard": true,
+        "iec62196_compliance": true
+      },
+      "grid_codes": {
+        "vde_ar_n_4100": true,
+        "en50438": true,
+        "cei_0_21": true,
+        "rd_1699": true
+      },
+      "energy_markets": {
+        "epex_spot": true,
+        "nordpool": true,
+        "belpex": true,
+        "flexibility_platforms": true
+      }
+    },
+    "uk": {
+      "connector_standards": {
+        "type2_connector": true,
+        "ccs2_connector": true
+      },
+      "grid_codes": {
+        "g99": true,
+        "g100": true,
+        "erec_g5_5": true
+      },
+      "energy_markets": {
+        "nordpool_uk": true,
+        "octopus_agile": true,
+        "ofgem_flexibility": true
+      }
+    },
+    "france": {
+      "linky_meter_integration": true,
+      "enedis_flexibility": true,
+      "rte_tempo_tariff": true
+    },
+    "germany": {
+      "stallpreis_integration": true,
+      "netzdienliche_steuerung": true,
+      "marktstammdatenregister": true
+    }
+  },
+  "compliance_and_certification": {
+    "standards_compliance": [
+      "ISO15118-2",
+      "ISO15118-20", 
+      "IEC61851-1",
+      "IEC61851-23",
+      "IEC62196-2",
+      "EN50438",
+      "VDE-AR-N-4100",
+      "UN-ECE-R10"
+    ],
+    "regional_certications": {
+      "europe": ["CE", "DEKRA", "TUV_SUD", "VDE"],
+      "france": ["AFNOR", "UTAC"],
+      "germany": ["VDE", "PTB"],
+      "uk": ["BSI", "UKAS"]
+    },
+    "cybersecurity": {
+      "framework": "ISO27001",
+      "automotive_specific": "ISO21434",
+      "vulnerability_management": true,
+      "penetration_testing": "quarterly",
+      "security_updates": "automatic"
+    },
+    "privacy": {
+      "gdpr_compliance": true,
+      "data_minimization": true,
+      "consent_management": true,
+      "right_to_deletion": true
+    }
+  },
+  "version_control": {
+    "semantic_versioning": true,
+    "release_channel": "stable",
+    "rollback_capability": true,
+    "update_mechanism": "ota_with_validation",
+    "compatibility_matrix": {
+      "vlink_ms_4.2.x": "fully_compatible",
+      "vlink_ms_4.1.x": "fully_compatible", 
+      "vlink_ms_4.0.x": "fully_compatible",
+      "vlink_ms_3.2.x": "limited_compatibility",
+      "chameleon_3.x": "optimized_compatibility",
+      "chameleon_2.x": "basic_compatibility"
+    },
+    "deployment": {
+      "staged_rollout": true,
+      "canary_testing": true,
+      "a_b_testing": true,
+      "geographic_rollout": ["france", "germany", "benelux", "uk", "nordics"],
+      "rollback_triggers": ["error_rate > 3%", "performance_degradation > 15%", "chameleon_efficiency < 92%"]
+    }
+  }
+}

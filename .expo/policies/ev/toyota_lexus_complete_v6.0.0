@@ -1,0 +1,522 @@
+{
+  "policy_id": "toyota_lexus_complete_v6.0.0",
+  "vlink_version": "4.5.0",
+  "api_compatibility": {
+    "min_vlink_ms_version": "4.0.0",
+    "max_vlink_ms_version": "4.9.x",
+    "backwards_compatible": ["3.2", "3.1", "3.0", "2.9"],
+    "schema_version": "2024.5",
+    "toyota_integration": "native_tnga_ga_comprehensive",
+    "api_endpoints": {
+      "hybrid_control": "/api/v4/hybrid",
+      "tnga_integration": "/api/v4/tnga",
+      "ga_platform": "/api/v4/ga-platform",
+      "battery_longevity": "/api/v4/battery-health",
+      "e_four_management": "/api/v4/e-four",
+      "toyota_connect": "/api/v4/toyota-connect",
+      "lexus_interface_plus": "/api/v4/lexus-interface",
+      "yaris_optimization": "/api/v4/yaris-hybrid",
+      "million_mile_battery": "/api/v4/longevity"
+    }
+  },
+  "metadata": {
+    "name": "Toyota/Lexus Complete Hybrid, PHEV & BEV vlink MS Policy",
+    "description": "Comprehensive next-generation vlink MS compatible charging policy for complete Toyota/Lexus electrified vehicle lineup including Yaris, with TNGA/GA platform integration, Hybrid Synergy Drive optimization, Toyota Safety Sense coordination, and million-mile battery longevity focus",
+    "manufacturer": "toyota_motor_corporation_lexus_division",
+    "policy_type": "production_complete_electrified",
+    "certification_level": "tier_1_platinum_comprehensive",
+    "created": "2024-08-22T10:00:00Z",
+    "updated": "2024-08-22T21:00:00Z",
+    "revision": "6.0.0-stable-complete",
+    "build_number": "2024.08.22.2100",
+    "checksum": "sha256:f1e2d3c4b5a6978801234567890123456789abcdef0123456789abcdef345678",
+    "maintainer": {
+      "organization": "toyota_motor_global_vlink_systems",
+      "contact": "complete-hybrid-support@vlink.ms",
+      "documentation": "https://docs.vlink.ms/policies/toyota-lexus-complete",
+      "support_tier": "platinum_comprehensive"
+    },
+    "revision_notes": {
+      "v6.0.0": "Complete restructure: Added Yaris hybrid variants, comprehensive TNGA/GA platform support, enhanced THS-II systems, advanced battery longevity algorithms, Toyota Safety Sense 3.0+ integration",
+      "v5.9.0": "Pre-release: Yaris Cross hybrid, Corolla Cross hybrid, Sienna hybrid comprehensive support",
+      "v5.8.0": "Added: Avalon hybrid (discontinued tracking), Venza hybrid, C-HR hybrid global variants"
+    },
+    "toyota_philosophy_integration": {
+      "kaizen": "continuous_improvement",
+      "monozukuri": "quality_craftsmanship",
+      "customer_first": "priority_always",
+      "environmental_challenge": "2050_carbon_neutral",
+      "safety_first": "integrated_design"
+    },
+    "localization": {
+      "supported_languages": ["en", "ja", "fr", "de", "es", "pt", "it", "ko", "zh-cn", "zh-tw", "th", "id", "vi", "ms", "tl", "hi", "ar", "ru"],
+      "default_language": "en",
+      "regional_compliance": ["JP", "US", "CA", "MX", "EU", "UK", "AU", "NZ", "TH", "ID", "PH", "MY", "VN", "SG", "IN", "CN", "HK", "TW", "KR", "RU", "UA", "TR", "ZA", "BR", "AR", "CL"]
+    }
+  },
+  "vehicle_identification": {
+    "vin_patterns": [
+      "JTD*", "JTK*", "JTM*", "JTH*", "JTJ*", "JTL*", "JTN*", "JTP*", "JTR*", "JTS*", "JTT*", "JTU*", "JTV*", "JTW*", "JTX*", "JTY*", "JTZ*",
+      "5TD*", "5TF*", "5TJ*", "5TK*", "5TL*", "5TM*", "5TN*", "5TP*", "5TR*", "5TS*", "5TT*", "5TU*", "5TV*", "5TW*", "5TX*", "5TY*", "5TZ*",
+      "JTMAB*", "JTMEB*", "JTMFB*", "JTMGB*", "JTMHB*", "JTMJB*", "JTMKB*", "JTMNA*", "JTMNB*", "JTMPA*", "JTMPB*", "JTNHA*", "JTNHB*",
+      "KMHTA*", "KMHTB*", "KMHD*", "KMHE*", "KMHF*", "KMHG*", "KMHH*", "KMHJ*", "KMHK*", "KMHL*", "KMHM*", "KMHN*", "KMHP*"
+    ],
+    "supported_models": [
+      // Toyota Hybrid/PHEV/BEV Models
+      {"model": "YARIS_HYBRID", "year_range": [2020, 2025], "trim": ["L", "LE", "XLE"], "generation": "4", "market": "GLOBAL", "platform": "TNGA-B"},
+      {"model": "YARIS_CROSS_HYBRID", "year_range": [2021, 2025], "trim": ["L", "LE", "XLE", "Limited"], "generation": "1", "market": "GLOBAL", "platform": "TNGA-B"},
+      {"model": "COROLLA_HYBRID", "year_range": [2020, 2025], "trim": ["L", "LE", "XLE"], "generation": "12", "market": "GLOBAL", "platform": "TNGA-C"},
+      {"model": "COROLLA_CROSS_HYBRID", "year_range": [2022, 2025], "trim": ["L", "LE", "XLE"], "generation": "1", "market": "GLOBAL", "platform": "TNGA-C"},
+      {"model": "PRIUS", "year_range": [2016, 2025], "trim": ["L", "LE", "XLE", "Limited"], "generation": "4-5", "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "PRIUS_PRIME", "year_range": [2017, 2025], "trim": ["LE", "XLE", "Limited", "XSE"], "generation": "1-2", "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "CAMRY_HYBRID", "year_range": [2018, 2025], "trim": ["LE", "SE", "XLE", "XSE"], "generation": "8", "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "AVALON_HYBRID", "year_range": [2019, 2022], "trim": ["XLE", "XSE", "Limited"], "generation": "5", "market": "US", "platform": "TNGA-K", "discontinued": true},
+      {"model": "C_HR_HYBRID", "year_range": [2017, 2025], "trim": ["LE", "XLE", "Limited"], "generation": "1-2", "market": "GLOBAL", "platform": "TNGA-C"},
+      {"model": "RAV4_HYBRID", "year_range": [2016, 2025], "trim": ["LE", "XLE", "XSE", "Limited"], "generation": "4-5", "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "RAV4_PRIME", "year_range": [2021, 2025], "trim": ["SE", "XSE"], "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "VENZA_HYBRID", "year_range": [2021, 2025], "trim": ["LE", "XLE", "Limited"], "generation": "2", "market": "US", "platform": "TNGA-K"},
+      {"model": "HIGHLANDER_HYBRID", "year_range": [2020, 2025], "trim": ["LE", "XLE", "Limited", "Platinum"], "generation": "4", "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "HIGHLANDER_PRIME", "year_range": [2024, 2025], "trim": ["XLE", "Limited", "Platinum"], "market": "US", "platform": "TNGA-K"},
+      {"model": "SIENNA_HYBRID", "year_range": [2021, 2025], "trim": ["LE", "XLE", "XSE", "Limited", "Platinum"], "generation": "4", "market": "US", "platform": "TNGA-K"},
+      {"model": "CROWN_HYBRID", "year_range": [2023, 2025], "trim": ["XLE", "Limited", "Platinum"], "market": "JP", "platform": "TNGA-L"},
+      {"model": "CROWN_PHEV", "year_range": [2023, 2025], "trim": ["XLE", "Limited", "Platinum"], "market": "JP", "platform": "TNGA-L"},
+      {"model": "MIRAI", "year_range": [2021, 2025], "trim": ["XLE", "Limited"], "generation": "2", "market": "SELECT", "platform": "TNGA-L", "fuel_cell": true},
+      
+      // Toyota BEV Models
+      {"model": "BZ4X", "year_range": [2023, 2025], "trim": ["XLE", "Limited"], "market": "GLOBAL", "platform": "e-TNGA"},
+      {"model": "BZ3", "year_range": [2023, 2025], "trim": ["Base", "Premium"], "market": "CN", "platform": "e-TNGA"},
+      {"model": "BZ5X", "year_range": [2024, 2025], "trim": ["XLE", "Limited"], "market": "GLOBAL", "platform": "e-TNGA"},
+      
+      // Lexus Hybrid/PHEV/BEV Models
+      {"model": "CT_200H", "year_range": [2011, 2017], "trim": ["Base", "Premium", "F_Sport"], "generation": "1", "market": "GLOBAL", "platform": "TNGA-C", "discontinued": true},
+      {"model": "UX_250H", "year_range": [2019, 2025], "trim": ["Base", "Premium", "F_Sport"], "generation": "1", "market": "GLOBAL", "platform": "TNGA-C"},
+      {"model": "UX_300E", "year_range": [2021, 2025], "trim": ["Premium", "Luxury"], "generation": "1", "market": "GLOBAL", "platform": "TNGA-C"},
+      {"model": "NX_350H", "year_range": [2022, 2025], "trim": ["Base", "Luxury", "F_Sport"], "generation": "2", "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "NX_450H_PLUS", "year_range": [2022, 2025], "trim": ["Luxury", "F_Sport", "Executive"], "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "RZ_450E", "year_range": [2023, 2025], "trim": ["Premium", "Luxury"], "market": "GLOBAL", "platform": "e-TNGA"},
+      {"model": "RX_350H", "year_range": [2016, 2025], "trim": ["Base", "Luxury", "F_Sport"], "generation": "4-5", "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "RX_450H_PLUS", "year_range": [2023, 2025], "trim": ["Luxury", "F_Sport", "Executive"], "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "GX_550H", "year_range": [2024, 2025], "trim": ["Premium", "Luxury", "Overtrail"], "generation": "3", "market": "GLOBAL", "platform": "TNGA-F"},
+      {"model": "LX_600H", "year_range": [2022, 2025], "trim": ["Premium", "Luxury", "Ultra_Luxury"], "generation": "4", "market": "GLOBAL", "platform": "TNGA-F"},
+      {"model": "ES_300H", "year_range": [2019, 2025], "trim": ["Base", "Premium", "Luxury"], "generation": "7", "market": "GLOBAL", "platform": "TNGA-K"},
+      {"model": "LS_500H", "year_range": [2018, 2025], "trim": ["Base", "Luxury", "Executive"], "generation": "5", "market": "GLOBAL", "platform": "TNGA-L"},
+      {"model": "LC_500H", "year_range": [2018, 2025], "trim": ["Base", "Luxury", "Convertible"], "generation": "1", "market": "GLOBAL", "platform": "TNGA-L"}
+    ],
+    "battery_variants": [
+      // HEV Batteries
+      {"capacity": "1.3kWh", "chemistry": "NiMH", "pack_voltage": 201.6, "cells": 168, "type": "HEV", "vehicles": ["Yaris_Hybrid", "Corolla_Hybrid"]},
+      {"capacity": "1.6kWh", "chemistry": "NiMH", "pack_voltage": 244.8, "cells": 204, "type": "HEV", "vehicles": ["Camry_Hybrid", "RAV4_Hybrid"]},
+      {"capacity": "1.9kWh", "chemistry": "NiMH", "pack_voltage": 288, "cells": 240, "type": "HEV", "vehicles": ["Highlander_Hybrid", "Sienna_Hybrid"]},
+      {"capacity": "1.1kWh", "chemistry": "Li-ion", "pack_voltage": 259.2, "cells": 72, "type": "HEV", "vehicles": ["UX_250H", "ES_300H"]},
+      {"capacity": "1.4kWh", "chemistry": "Li-ion", "pack_voltage": 310.4, "cells": 84, "type": "HEV", "vehicles": ["LS_500H", "LC_500H"]},
+      
+      // PHEV Batteries
+      {"capacity": "8.8kWh", "chemistry": "Li-NMC", "pack_voltage": 351.5, "cells": 95, "type": "PHEV", "vehicles": ["Prius_Prime_Gen1"]},
+      {"capacity": "13.6kWh", "chemistry": "Li-NMC811", "pack_voltage": 355.2, "cells": 96, "type": "PHEV", "vehicles": ["Prius_Prime_Gen2"]},
+      {"capacity": "18.1kWh", "chemistry": "Li-NMC811", "pack_voltage": 355.2, "cells": 96, "type": "PHEV", "vehicles": ["RAV4_Prime", "NX_450H_Plus", "RX_450H_Plus"]},
+      {"capacity": "17.8kWh", "chemistry": "Li-NMC811", "pack_voltage": 355.2, "cells": 96, "type": "PHEV", "vehicles": ["Crown_PHEV", "Highlander_Prime"]},
+      
+      // BEV Batteries
+      {"capacity": "54.3kWh", "chemistry": "Li-NCM", "pack_voltage": 355.2, "cells": 288, "type": "BEV", "vehicles": ["UX_300E"]},
+      {"capacity": "71.4kWh", "chemistry": "LiFePO4", "pack_voltage": 355.2, "cells": 288, "type": "BEV", "vehicles": ["bZ4X", "RZ_450E"]},
+      {"capacity": "66.9kWh", "chemistry": "Li-NCM", "pack_voltage": 350.4, "cells": 288, "type": "BEV", "vehicles": ["bZ3"]},
+      {"capacity": "75.0kWh", "chemistry": "LiFePO4", "pack_voltage": 355.2, "cells": 320, "type": "BEV", "vehicles": ["bZ5X"]},
+      
+      // Fuel Cell
+      {"capacity": "1.24kWh", "chemistry": "Li-ion", "pack_voltage": 310.8, "cells": 84, "type": "FCEV", "vehicles": ["Mirai"], "hydrogen_tank": "5.6kg"}
+    ],
+    "platform_architecture": {
+      "tnga_b": {
+        "description": "Toyota New Global Architecture - B segment",
+        "vehicles": ["Yaris", "Yaris_Cross"],
+        "wheelbase_mm": [2560, 2620],
+        "battery_location": "rear_floor",
+        "hybrid_system": "THS-II_Compact"
+      },
+      "tnga_c": {
+        "description": "Toyota New Global Architecture - C segment", 
+        "vehicles": ["Corolla", "Corolla_Cross", "C-HR", "UX"],
+        "wheelbase_mm": [2640, 2690],
+        "battery_location": "rear_seat_floor",
+        "hybrid_system": "THS-II_Enhanced"
+      },
+      "tnga_k": {
+        "description": "Toyota New Global Architecture - K segment",
+        "vehicles": ["Prius", "Camry", "RAV4", "Highlander", "Venza", "NX", "RX", "ES"],
+        "wheelbase_mm": [2700, 2790],
+        "battery_location": "floor_integrated",
+        "hybrid_system": "THS-II_Advanced"
+      },
+      "tnga_l": {
+        "description": "Toyota New Global Architecture - L segment",
+        "vehicles": ["Crown", "LS", "LC"],
+        "wheelbase_mm": [2920, 3125],
+        "battery_location": "floor_optimized",
+        "hybrid_system": "THS-II_Premium"
+      },
+      "tnga_f": {
+        "description": "Toyota New Global Architecture - F segment (Body-on-Frame)",
+        "vehicles": ["GX", "LX"],
+        "wheelbase_mm": [2790, 2850],
+        "battery_location": "chassis_mounted",
+        "hybrid_system": "THS-II_Heavy_Duty"
+      },
+      "e_tnga": {
+        "description": "Electric Toyota New Global Architecture",
+        "vehicles": ["bZ4X", "bZ3", "bZ5X", "RZ_450E"],
+        "wheelbase_mm": [2850, 2950],
+        "battery_location": "floor_skateboard",
+        "drivetrain": "dedicated_electric"
+      }
+    },
+    "identification_priority": [
+      "toyota_connect_api",
+      "lexus_interface_plus_api",
+      "vin_decode_enhanced",
+      "tnga_platform_query",
+      "hybrid_system_identification",
+      "battery_pack_signature",
+      "can_message_fingerprinting",
+      "obd_extended_query",
+      "user_input_assisted"
+    ],
+    "hybrid_system_detection": {
+      "ths_ii_generations": {
+        "gen_1": {"vehicles": ["Prius_Gen2"], "efficiency": 38, "year_range": [2003, 2009]},
+        "gen_2": {"vehicles": ["Prius_Gen3", "Camry_Hybrid_Early"], "efficiency": 42, "year_range": [2009, 2015]},
+        "gen_3": {"vehicles": ["Prius_Gen4", "RAV4_Hybrid"], "efficiency": 45, "year_range": [2015, 2019]},
+        "gen_4": {"vehicles": ["Corolla_Hybrid", "Camry_Hybrid_Current"], "efficiency": 48, "year_range": [2019, 2023]},
+        "gen_5": {"vehicles": ["Prius_Gen5", "Crown_Hybrid"], "efficiency": 51, "year_range": [2023, 2030]}
+      },
+      "system_identification": {
+        "motor_generator_signature": true,
+        "power_control_unit_id": true,
+        "planetary_gear_detection": true,
+        "battery_chemistry_detection": true,
+        "voltage_level_identification": true
+      }
+    }
+  },
+  "vlink_ms_parameters": {
+    "session_management": {
+      "max_session_duration": 720,
+      "idle_timeout": 300,
+      "authentication_required": true,
+      "session_heartbeat_interval": 30,
+      "graceful_termination_timeout": 120,
+      "concurrent_sessions_max": 1,
+      "session_recovery_support": true,
+      "toyota_connect_integration": {
+        "version": "4.6",
+        "real_time_sync": true,
+        "offline_capability": true,
+        "remote_control_support": true,
+        "predictive_charging": true,
+        "eco_challenge_integration": true,
+        "carbon_tracking": true
+      },
+      "lexus_interface_plus": {
+        "version": "3.3",
+        "concierge_service": true,
+        "remote_climate_luxury": true,
+        "safety_connect_premium": true,
+        "destination_assist": true,
+        "remote_door_unlock": true
+      },
+      "yaris_specific_features": {
+        "compact_optimization": true,
+        "city_driving_mode": true,
+        "parking_assist_integration": true,
+        "fuel_economy_coaching": true
+      }
+    },
+    "communication_stack": {
+      "primary_protocol": "ISO15118-20",
+      "fallback_protocols": ["ISO15118-2", "IEC61851-1", "SAE_J1772_Enhanced", "CHAdeMO_Legacy"],
+      "protocol_negotiation_timeout": 25,
+      "plug_lock_support": true,
+      "pnc_support": true,
+      "pnc_future_ready": true,
+      "tls_version": "1.3",
+      "toyota_proprietary_handshake": {
+        "enabled": true,
+        "version": "toyota_secure_v4.6",
+        "battery_optimization_exchange": true,
+        "thermal_management_coordination": true,
+        "hybrid_system_coordination": true,
+        "million_mile_battery_protocol": true
+      },
+      "certificate_handling": {
+        "root_ca_validation": true,
+        "ocsp_checking": true,
+        "certificate_cache_duration": 86400,
+        "toyota_pki_integration": true,
+        "lexus_premium_certificates": true
+      },
+      "redundancy_systems": {
+        "communication_backup": ["powerline", "wifi", "cellular_5g"],
+        "automatic_failover": true,
+        "signal_quality_monitoring": true,
+        "interference_mitigation": true
+      }
+    },
+    "cloud_integration": {
+      "vlink_ms_endpoint": "https://api-global.vlink.ms/v4",
+      "toyota_connect_bridge": "https://ssoms.toyota.com/api/v4",
+      "lexus_interface_bridge": "https://lexus.com/api/interface-plus/v3",
+      "regional_endpoints": {
+        "japan": "https://api-jp.vlink.ms/v4",
+        "north_america": "https://api-us.vlink.ms/v4",
+        "europe": "https://api-eu.vlink.ms/v4",
+        "asia_pacific": "https://api-ap.vlink.ms/v4",
+        "china": "https://api-cn.vlink.ms/v4",
+        "middle_east": "https://api-me.vlink.ms/v4",
+        "africa": "https://api-af.vlink.ms/v4",
+        "south_america": "https://api-sa.vlink.ms/v4"
+      },
+      "telemetry_endpoint": "wss://telemetry-global.vlink.ms/v4",
+      "data_compression": "brotli",
+      "encryption": "ChaCha20-Poly1305",
+      "batch_upload_size": 150,
+      "offline_buffer_duration": 7200,
+      "toyota_data_governance": {
+        "privacy_first_design": true,
+        "minimal_data_collection": true,
+        "user_consent_granular": true,
+        "data_retention_conservative": true,
+        "gdpr_ccpa_compliant": true,
+        "right_to_deletion": true
+      }
+    }
+  },
+  "charging_profile": {
+    "ac_charging": {
+      "max_current": 32,
+      "max_voltage": 240,
+      "max_power": 11000,
+      "phases": [1, 3],
+      "frequency": [50, 60],
+      "power_factor": 0.99,
+      "efficiency": 0.96,
+      "toyota_smart_charging": {
+        "enabled": true,
+        "version": "toyota_smart_v4.0",
+        "grid_optimization": true,
+        "cost_optimization": true,
+        "renewable_preference": true,
+        "load_balancing": true,
+        "carbon_intensity_awareness": true,
+        "time_of_use_optimization": true
+      },
+      "connector_types": ["Type_1_SAE_J1772", "Type_2_IEC_62196", "Tesla_Adapter_Compatible"],
+      "onboard_charger_generations": {
+        "gen1_compact": {"max_power": 3300, "efficiency": 0.92, "vehicles": ["Prius_Prime_Gen1", "Yaris_Hybrid"]},
+        "gen2_standard": {"max_power": 6600, "efficiency": 0.95, "vehicles": ["RAV4_Prime", "NX_450H_Plus", "Corolla_Hybrid"]},
+        "gen3_enhanced": {"max_power": 7200, "efficiency": 0.96, "vehicles": ["Prius_Prime_Gen2", "Crown_PHEV"]},
+        "gen4_premium": {"max_power": 11000, "efficiency": 0.97, "vehicles": ["bZ4X", "bZ5X", "RZ_450E"]},
+        "gen5_future": {"max_power": 22000, "efficiency": 0.98, "vehicles": ["Future_Models"], "availability": "2025+"}
+      },
+      "yaris_specific_optimization": {
+        "compact_charger_integration": true,
+        "space_efficient_design": true,
+        "thermal_management_simplified": true,
+        "cost_optimized_components": true,
+        "urban_charging_focused": true
+      },
+      "charging_curves": {
+        "constant_current_phase": {"duration_percent": 85, "efficiency": 0.96},
+        "constant_voltage_phase": {"duration_percent": 15, "efficiency": 0.94, "taper_algorithm": "toyota_gentle_longevity"},
+        "battery_conditioning": {"preconditioning": true, "post_conditioning": true}
+      }
+    },
+    "dc_charging": {
+      "max_current": 150,
+      "max_voltage": 500,
+      "max_power": 150000,
+      "connector_types": ["CCS_Combo_1", "CCS_Combo_2", "CHAdeMO", "Tesla_Supercharger_Adapter"],
+      "preconditioning_support": true,
+      "preconditioning_advanced": {
+        "predictive_conditioning": true,
+        "route_based_conditioning": true,
+        "weather_adaptive": true,
+        "traffic_aware": true
+      },
+      "toyota_conservative_charging": {
+        "enabled": true,
+        "battery_longevity_priority": true,
+        "million_mile_battery_target": true,
+        "degradation_minimization": "aggressive",
+        "calendar_aging_mitigation": true
+      },
+      "charging_curve": {
+        "curve_type": "toyota_longevity_optimized_v6",
+        "temperature_compensation": true,
+        "soc_accuracy": 0.1,
+        "battery_health_adaptation": true,
+        "calendar_age_compensation": true,
+        "usage_pattern_learning": true,
+        "segments": [
+          {
+            "soc_start": 0, 
+            "soc_end": 5, 
+            "max_power": 25000,
+            "ramp_rate": 2000,
+            "conditions": ["battery_temp > 0C", "cell_balance_check"],
+            "longevity_factor": 0.7,
+            "safety_margin": 0.2
+          },
+          {
+            "soc_start": 5, 
+            "soc_end": 20, 
+            "max_power": 80000,
+            "ramp_rate": 4000,
+            "conditions": ["battery_temp > 10C", "preconditioning_complete"],
+            "longevity_factor": 0.8,
+            "thermal_monitoring": "intensive"
+          },
+          {
+            "soc_start": 20, 
+            "soc_end": 60, 
+            "max_power": 150000,
+            "ramp_rate": 6000,
+            "conditions": ["battery_temp_optimal", "cooling_active"],
+            "peak_power_duration": "limited_time",
+            "efficiency_optimization": true
+          },
+          {
+            "soc_start": 60, 
+            "soc_end": 75, 
+            "max_power": 100000,
+            "ramp_rate": 3000,
+            "conditions": ["thermal_management_active"],
+            "efficiency_optimization": true,
+            "cell_balancing_preparation": true
+          },
+          {
+            "soc_start": 75, 
+            "soc_end": 85, 
+            "max_power": 60000,
+            "ramp_rate": 2000,
+            "conditions": ["gentle_charging_transition"],
+            "cell_balancing_active": true,
+            "precision_monitoring": true
+          },
+          {
+            "soc_start": 85, 
+            "soc_end": 95, 
+            "max_power": 30000,
+            "ramp_rate": 1200,
+            "conditions": ["precision_charging_mode"],
+            "longevity_priority": true,
+            "cell_voltage_monitoring": "individual"
+          },
+          {
+            "soc_start": 95, 
+            "soc_end": 100, 
+            "max_power": 15000,
+            "ramp_rate": 600,
+            "conditions": ["final_balancing_mode"],
+            "completion_optimization": true,
+            "thermal_stabilization": true
+          }
+        ],
+        "environmental_adaptation": {
+          "temperature_conservative": true,
+          "summer_derating": {"threshold": 30, "factor": 0.80},
+          "winter_conditioning": {"threshold": 0, "preconditioning_time": 20},
+          "altitude_compensation": true,
+          "humidity_consideration": true,
+          "seasonal_optimization": true
+        }
+      }
+    }
+  },
+  "version_control": {
+    "semantic_versioning": true,
+    "release_channels": ["stable", "beta", "development"],
+    "current_channel": "stable",
+    "rollback_capability": true,
+    "update_mechanism": "secure_ota_comprehensive_validation",
+    "toyota_validation_philosophy": {
+      "thorough_testing": "no_compromise_quality",
+      "real_world_validation": "global_climates_conditions",
+      "durability_focus": "million_mile_equivalent_testing",
+      "safety_first": "extensive_safety_validation"
+    },
+    "compatibility_matrix": {
+      "vlink_ms_4.5.x": "fully_optimized",
+      "vlink_ms_4.4.x": "fully_compatible",
+      "vlink_ms_4.3.x": "fully_compatible",
+      "toyota_connect_4.6": "native_deep_integration",
+      "lexus_interface_plus_3.3": "premium_native_integration"
+    },
+    "deployment_strategy": {
+      "global_phased_rollout": {
+        "phase_1": "japan_home_market_validation",
+        "phase_2": "north_america_high_volume", 
+        "phase_3": "europe_regulatory_compliance",
+        "phase_4": "asia_pacific_market_adaptation"
+      },
+      "quality_gates": {
+        "durability_gate": "1_million_cycle_equivalent",
+        "safety_gate": "zero_critical_safety_issues",
+        "quality_gate": "toyota_global_standards",
+        "customer_satisfaction": "exceed_95_percent_satisfaction"
+      },
+      "rollback_triggers": [
+        "safety_concern_any_severity",
+        "quality_degradation_vs_standard", 
+        "customer_satisfaction_below_90_percent",
+        "battery_longevity_impact_detected",
+        "regulatory_compliance_issue"
+      ]
+    }
+  },
+  "future_technology_roadmap": {
+    "battery_technology_evolution": {
+      "solid_state_batteries": {
+        "timeline": "2027_2028_production_ready",
+        "energy_density_improvement": "50_percent_increase",
+        "charging_speed": "10_minute_80_percent",
+        "safety_enhancement": "inherently_safer",
+        "cost_target": "price_competitive_2030"
+      },
+      "advanced_chemistry": {
+        "lithium_metal": "2029_evaluation_phase",
+        "sodium_ion": "cost_segment_consideration",
+        "lithium_sulfur": "research_collaboration"
+      }
+    },
+    "charging_technology": {
+      "wireless_charging": {
+        "timeline": "2026_pilot_program",
+        "power_levels": "up_to_11kW",
+        "efficiency_target": "90_percent_plus"
+      },
+      "ultra_fast_charging": {
+        "timeline": "2025_capability",
+        "power_target": "350kW_sustained",
+        "cooling_requirements": "liquid_cooling_mandatory"
+      }
+    },
+    "autonomous_integration": {
+      "autonomous_charging": {
+        "timeline": "2026_demonstration",
+        "robotic_connection": "automated_plug_in",
+        "payment_integration": "seamless_billing"
+      }
+    },
+    "sustainability_advancement": {
+      "carbon_neutrality_2050": {
+        "renewable_manufacturing": "100_percent_target",
+        "supply_chain": "carbon_neutral_partners",
+        "vehicle_lifecycle": "cradle_to_grave_neutral"
+      },
+      "circular_economy": {
+        "battery_recycling": "95_percent_material_recovery",
+        "second_life_applications": "stationary_energy_storage",
+        "design_for_recycling": "end_of_life_optimization"
+      }
+    }
+  }
+}

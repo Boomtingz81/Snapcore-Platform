@@ -1,0 +1,644 @@
+{
+  "policy_id": "ford_ev_phev_v3.0",
+  "vlink_version": "4.1",
+  "schema_version": "1.0.0",
+  "metadata": {
+    "name": "Ford EV & PHEV Advanced Charging Policy",
+    "description": "Enhanced vlink MS compatible charging policy for Ford Electric and Plug-in Hybrid vehicles with advanced features",
+    "manufacturer": "ford",
+    "created": "2024-01-15T10:00:00Z",
+    "updated": "2025-08-23T12:00:00Z",
+    "version_notes": "Added dynamic load management, enhanced safety protocols, bidirectional charging optimization, and AI-driven charging intelligence",
+    "certification": {
+      "iso15118": "v2.0",
+      "sae_j1772": "v2016",
+      "din70121": "v2012",
+      "fcc_id": "2AUTA-VLINK4",
+      "ul_listed": true
+    }
+  },
+  "vehicle_identification": {
+    "vin_patterns": ["1FM*", "1FT*", "3FM*", "MAJ*", "WF0*"],
+    "supported_models": [
+      {
+        "model": "MUSTANG_MACH_E",
+        "variants": ["SELECT", "PREMIUM", "CALIFORNIA_ROUTE_1", "GT", "RALLY"],
+        "year_range": [2021, 2026],
+        "model_codes": ["U552", "U553", "U554"],
+        "market_regions": ["US", "CA", "MX", "EU"]
+      },
+      {
+        "model": "F150_LIGHTNING",
+        "variants": ["PRO", "XLT", "LARIAT", "PLATINUM", "RAPTOR"],
+        "year_range": [2022, 2026],
+        "model_codes": ["W1E", "W1F"],
+        "market_regions": ["US", "CA", "MX"]
+      },
+      {
+        "model": "E_TRANSIT",
+        "variants": ["BASE", "CARGO", "PASSENGER", "CHASSIS_CAB", "CUTAWAY"],
+        "year_range": [2022, 2026],
+        "model_codes": ["VN", "VO"],
+        "market_regions": ["US", "CA", "EU", "UK"]
+      },
+      {
+        "model": "ESCAPE_PHEV",
+        "variants": ["SE", "TITANIUM", "ST_LINE"],
+        "year_range": [2020, 2025],
+        "model_codes": ["CUA"],
+        "market_regions": ["US", "CA", "EU"]
+      },
+      {
+        "model": "EXPLORER_PHEV",
+        "variants": ["XLT", "LIMITED", "PLATINUM"],
+        "year_range": [2025, 2026],
+        "model_codes": ["U625"],
+        "market_regions": ["US", "CA"]
+      },
+      {
+        "model": "TRANSIT_CUSTOM_PHEV",
+        "variants": ["BASE", "TREND", "LIMITED"],
+        "year_range": [2024, 2026],
+        "model_codes": ["V362"],
+        "market_regions": ["EU", "UK"]
+      }
+    ],
+    "battery_variants": [
+      {"capacity_kwh": 14.4, "type": "PHEV", "chemistry": "NCM622"},
+      {"capacity_kwh": 75.7, "type": "BEV", "chemistry": "NCM811"},
+      {"capacity_kwh": 88.0, "type": "BEV", "chemistry": "NCM811"},
+      {"capacity_kwh": 98.0, "type": "BEV", "chemistry": "LFP"},
+      {"capacity_kwh": 131.0, "type": "BEV", "chemistry": "NCM811"},
+      {"capacity_kwh": 155.0, "type": "BEV", "chemistry": "NCM811"}
+    ]
+  },
+  "vlink_parameters": {
+    "session_management": {
+      "max_session_duration": 1440,
+      "idle_timeout": 900,
+      "authentication_required": true,
+      "multi_factor_auth": true,
+      "fordpass_integration": true,
+      "fleet_management_support": true,
+      "guest_charging_support": true,
+      "session_persistence": true,
+      "automatic_reconnect": true,
+      "session_analytics": true
+    },
+    "communication_stack": {
+      "primary_protocol": "ISO15118-20",
+      "secondary_protocols": ["ISO15118-2", "DIN70121"],
+      "fallback_protocols": ["SAE_J1772", "CHAdeMO"],
+      "plug_lock_support": true,
+      "pnc_support": true,
+      "bidirectional_communication": true,
+      "cybersecurity_framework": "ISO15118-20",
+      "encryption": "AES-256",
+      "digital_certificates": true,
+      "ford_intelligent_backup_power": true,
+      "vehicle_to_everything": true
+    }
+  },
+  "charging_profile": {
+    "ac_charging": {
+      "level_1": {
+        "max_current": 16,
+        "max_voltage": 120,
+        "max_power": 1920,
+        "phases": 1,
+        "connector_type": "NEMA_5_15"
+      },
+      "level_2": {
+        "max_current": 80,
+        "max_voltage": 240,
+        "max_power": 19200,
+        "phases": 1,
+        "connector_types": ["J1772", "NEMA_14_50", "FORD_CHARGE_STATION_PRO"]
+      },
+      "three_phase": {
+        "max_current": 32,
+        "max_voltage": 400,
+        "max_power": 22000,
+        "phases": 3,
+        "connector_type": "IEC_62196_TYPE_2",
+        "market_regions": ["EU", "UK"]
+      },
+      "frequency": 60,
+      "power_factor": 0.99,
+      "thd_limit": 5,
+      "grid_services_capable": true,
+      "smart_charging": true,
+      "load_balancing": true
+    },
+    "dc_charging": {
+      "ccs1": {
+        "max_current": 500,
+        "max_voltage": 920,
+        "max_power": 350000,
+        "connector_standard": "CCS_COMBO_1",
+        "market_regions": ["US", "CA", "MX"]
+      },
+      "ccs2": {
+        "max_current": 500,
+        "max_voltage": 920,
+        "max_power": 350000,
+        "connector_standard": "CCS_COMBO_2",
+        "market_regions": ["EU", "UK"]
+      },
+      "charging_curve": {
+        "curve_type": "ford_ai_optimized",
+        "dynamic_adjustment": true,
+        "weather_compensation": true,
+        "battery_age_factor": true,
+        "segments": [
+          {
+            "soc_start": 0,
+            "soc_end": 10,
+            "max_power": 175000,
+            "temperature_derating": true,
+            "preconditioning_bonus": 15000
+          },
+          {
+            "soc_start": 10,
+            "soc_end": 50,
+            "max_power": 350000,
+            "optimal_range": true,
+            "efficiency_priority": false
+          },
+          {
+            "soc_start": 50,
+            "soc_end": 70,
+            "max_power": 250000,
+            "cell_balancing_active": true
+          },
+          {
+            "soc_start": 70,
+            "soc_end": 80,
+            "max_power": 150000,
+            "longevity_mode": true
+          },
+          {
+            "soc_start": 80,
+            "soc_end": 90,
+            "max_power": 75000,
+            "taper_aggressive": true
+          },
+          {
+            "soc_start": 90,
+            "soc_end": 100,
+            "max_power": 25000,
+            "precision_charging": true
+          }
+        ],
+        "advanced_features": {
+          "preconditioning_optimization": true,
+          "route_based_conditioning": true,
+          "predictive_thermal_management": true,
+          "machine_learning_curves": true,
+          "real_time_adaptation": true
+        }
+      }
+    },
+    "wireless_charging": {
+      "supported": true,
+      "standard": "SAE_J2954",
+      "max_power": 11000,
+      "efficiency": 0.92,
+      "alignment_tolerance": 75,
+      "foreign_object_detection": true
+    }
+  },
+  "safety_limits": {
+    "temperature": {
+      "battery_operating_range": {
+        "min_c": -40,
+        "max_c": 60,
+        "optimal_min_c": 15,
+        "optimal_max_c": 35
+      },
+      "derating_thresholds": {
+        "level_1_c": 45,
+        "level_2_c": 50,
+        "level_3_c": 55,
+        "emergency_shutdown_c": 65
+      },
+      "thermal_management": {
+        "active_cooling": true,
+        "active_heating": true,
+        "heat_pump_integration": true,
+        "extreme_weather_mode": true,
+        "predictive_conditioning": true,
+        "zone_based_control": true
+      }
+    },
+    "electrical": {
+      "voltage_monitoring": {
+        "isolation_resistance_min": 500,
+        "insulation_monitoring": true,
+        "high_voltage_interlock": true,
+        "manual_service_disconnect": true,
+        "automatic_disconnect": true,
+        "voltage_ripple_limit": 2
+      },
+      "current_protection": {
+        "overcurrent_protection": true,
+        "ground_fault_detection": true,
+        "arc_fault_detection": true,
+        "current_limiting_active": true,
+        "differential_protection": true,
+        "harmonic_filtering": true
+      },
+      "power_quality": {
+        "voltage_regulation": true,
+        "frequency_regulation": true,
+        "power_factor_correction": true,
+        "grid_code_compliance": true
+      }
+    },
+    "mechanical": {
+      "connector_lock": {
+        "automatic_locking": true,
+        "force_feedback": true,
+        "tamper_detection": true,
+        "emergency_release": true
+      },
+      "cable_management": {
+        "strain_relief": true,
+        "weather_sealing": "IP67",
+        "temperature_monitoring": true
+      }
+    },
+    "cybersecurity": {
+      "secure_boot": true,
+      "encrypted_communication": true,
+      "certificate_management": true,
+      "intrusion_detection": true,
+      "secure_updates": true,
+      "audit_logging": true
+    }
+  },
+  "intelligent_charging": {
+    "ai_optimization": {
+      "machine_learning_enabled": true,
+      "user_pattern_learning": true,
+      "grid_optimization": true,
+      "cost_minimization": true,
+      "carbon_footprint_reduction": true,
+      "predictive_analytics": true
+    },
+    "dynamic_load_management": {
+      "real_time_adjustment": true,
+      "multi_vehicle_coordination": true,
+      "grid_capacity_monitoring": true,
+      "peak_shaving": true,
+      "valley_filling": true,
+      "demand_response_participation": true
+    },
+    "renewable_integration": {
+      "solar_optimization": true,
+      "wind_integration": true,
+      "energy_storage_coordination": true,
+      "carbon_intensity_tracking": true,
+      "renewable_energy_certificates": true
+    }
+  },
+  "bidirectional_charging": {
+    "vehicle_to_grid": {
+      "enabled": true,
+      "max_export_power": 19200,
+      "grid_services": ["frequency_regulation", "voltage_support", "peak_shaving"],
+      "iso15118_20_compliant": true,
+      "utility_integration": true,
+      "revenue_sharing": true
+    },
+    "vehicle_to_home": {
+      "enabled": true,
+      "max_export_power": 9600,
+      "automatic_transfer_switch": true,
+      "islanding_protection": true,
+      "load_prioritization": true,
+      "backup_duration_estimation": true
+    },
+    "vehicle_to_load": {
+      "enabled": true,
+      "max_export_power": 2400,
+      "outlet_types": ["120V_15A", "240V_30A"],
+      "portable_power_station": true,
+      "worksite_power": true
+    }
+  },
+  "vlink_telemetry": {
+    "high_frequency_data": {
+      "interval_ms": 100,
+      "parameters": [
+        "instantaneous_power",
+        "voltage_l1_l2",
+        "current_l1_l2",
+        "power_factor",
+        "frequency",
+        "thd_voltage",
+        "thd_current"
+      ]
+    },
+    "standard_telemetry": {
+      "interval_ms": 1000,
+      "parameters": [
+        "state_of_charge",
+        "state_of_health",
+        "battery_voltage",
+        "battery_current",
+        "pack_power",
+        "cell_voltage_min_max",
+        "cell_temperature_avg_min_max",
+        "coolant_temperature",
+        "energy_delivered_session",
+        "energy_delivered_lifetime",
+        "charging_efficiency",
+        "time_to_target_soc",
+        "intelligent_range_estimate",
+        "cabin_preconditioning_status",
+        "grid_frequency",
+        "grid_voltage_quality"
+      ]
+    },
+    "diagnostic_data": {
+      "interval_ms": 5000,
+      "parameters": [
+        "fault_codes_active",
+        "fault_codes_pending",
+        "system_warnings",
+        "component_health_status",
+        "calibration_status",
+        "software_version_info",
+        "hardware_revision_info"
+      ]
+    },
+    "analytics": {
+      "charging_patterns": true,
+      "energy_consumption_analysis": true,
+      "cost_tracking": true,
+      "carbon_footprint_calculation": true,
+      "predictive_maintenance": true,
+      "user_behavior_insights": true
+    }
+  },
+  "error_handling": {
+    "fault_tolerance": {
+      "retry_attempts": 5,
+      "exponential_backoff": true,
+      "error_recovery_timeout": 60,
+      "graceful_degradation": true,
+      "redundant_systems": true
+    },
+    "diagnostic_integration": {
+      "ford_diagnostic_suite": true,
+      "remote_diagnostics": true,
+      "predictive_fault_detection": true,
+      "automatic_fault_reporting": true,
+      "technician_guided_repair": true
+    },
+    "update_management": {
+      "over_the_air_updates": true,
+      "delta_updates": true,
+      "rollback_capability": true,
+      "staged_deployment": true,
+      "update_verification": true
+    }
+  },
+  "manufacturer_specific": {
+    "ford": {
+      "battery_technology": {
+        "chemistry_variants": {
+          "ncm811": {
+            "energy_density": 265,
+            "cycle_life": 2000,
+            "fast_charge_capability": "excellent",
+            "thermal_stability": "good"
+          },
+          "ncm622": {
+            "energy_density": 240,
+            "cycle_life": 2500,
+            "fast_charge_capability": "good",
+            "thermal_stability": "excellent"
+          },
+          "lfp": {
+            "energy_density": 160,
+            "cycle_life": 4000,
+            "fast_charge_capability": "good",
+            "thermal_stability": "excellent",
+            "cost_optimized": true
+          }
+        },
+        "suppliers": ["SK_Innovation", "LG_Chem", "CATL", "BYD"],
+        "cell_formats": ["pouch", "prismatic", "cylindrical_4680"],
+        "cooling_systems": ["liquid", "air", "immersion"],
+        "heating_systems": ["integrated", "ptc", "heat_pump"],
+        "battery_management": {
+          "cell_balancing": "active",
+          "soc_estimation_accuracy": 0.5,
+          "soh_estimation": true,
+          "thermal_runaway_prevention": true,
+          "second_life_preparation": true
+        }
+      },
+      "connectivity_suite": {
+        "fordpass_connect": {
+          "remote_start": true,
+          "remote_climate": true,
+          "charging_control": true,
+          "location_services": true,
+          "vehicle_health": true,
+          "security_features": true
+        },
+        "sync4a": {
+          "wireless_android_auto": true,
+          "wireless_apple_carplay": true,
+          "alexa_built_in": true,
+          "google_assistant": true,
+          "voice_activated_charging": true
+        },
+        "telematics": {
+          "5g_connectivity": true,
+          "wifi_hotspot": true,
+          "emergency_services": true,
+          "concierge_services": true,
+          "real_time_traffic": true
+        }
+      },
+      "charging_ecosystem": {
+        "ford_charge_network": {
+          "partner_networks": ["Electrify_America", "EVgo", "ChargePoint", "Ionity"],
+          "plug_and_charge": true,
+          "unified_billing": true,
+          "route_planning_integration": true,
+          "reservation_system": true
+        },
+        "home_charging": {
+          "ford_charge_station_pro": true,
+          "mobile_connector": true,
+          "intelligent_load_management": true,
+          "solar_integration": true,
+          "time_of_use_optimization": true
+        }
+      },
+      "vehicle_configurations": {
+        "mustang_mach_e": {
+          "rwd_sr": {
+            "battery_capacity_kwh": 75.7,
+            "usable_capacity_kwh": 70.0,
+            "max_dc_power_kw": 115,
+            "max_ac_power_kw": 10.5,
+            "epa_range_miles": 247,
+            "efficiency_mpge": 105,
+            "drag_coefficient": 0.29
+          },
+          "awd_er": {
+            "battery_capacity_kwh": 88.0,
+            "usable_capacity_kwh": 81.0,
+            "max_dc_power_kw": 150,
+            "max_ac_power_kw": 10.5,
+            "epa_range_miles": 312,
+            "efficiency_mpge": 95,
+            "performance": {
+              "horsepower": 346,
+              "torque_lb_ft": 428,
+              "zero_to_60_mph": 5.2
+            }
+          },
+          "gt": {
+            "battery_capacity_kwh": 88.0,
+            "usable_capacity_kwh": 81.0,
+            "max_dc_power_kw": 150,
+            "max_ac_power_kw": 10.5,
+            "epa_range_miles": 270,
+            "efficiency_mpge": 85,
+            "performance": {
+              "horsepower": 480,
+              "torque_lb_ft": 634,
+              "zero_to_60_mph": 3.5,
+              "track_mode": true
+            }
+          }
+        },
+        "f150_lightning": {
+          "standard_range": {
+            "battery_capacity_kwh": 98.0,
+            "usable_capacity_kwh": 90.0,
+            "max_dc_power_kw": 155,
+            "max_ac_power_kw": 19.2,
+            "epa_range_miles": 230,
+            "towing_capacity_lbs": 7700,
+            "payload_capacity_lbs": 2000,
+            "pro_power_onboard_kw": 2.4
+          },
+          "extended_range": {
+            "battery_capacity_kwh": 131.0,
+            "usable_capacity_kwh": 120.0,
+            "max_dc_power_kw": 170,
+            "max_ac_power_kw": 19.2,
+            "epa_range_miles": 320,
+            "towing_capacity_lbs": 10000,
+            "payload_capacity_lbs": 1800,
+            "pro_power_onboard_kw": 9.6,
+            "intelligent_backup_power": true
+          }
+        }
+      },
+      "advanced_features": {
+        "intelligent_range": {
+          "weather_compensation": true,
+          "route_elevation_analysis": true,
+          "traffic_pattern_learning": true,
+          "hvac_impact_calculation": true,
+          "towing_range_adjustment": true
+        },
+        "thermal_preconditioning": {
+          "departure_time_based": true,
+          "route_based": true,
+          "weather_adaptive": true,
+          "energy_optimized": true,
+          "cabin_comfort_priority": true
+        },
+        "charging_optimization": {
+          "cost_optimization": true,
+          "carbon_optimization": true,
+          "time_optimization": true,
+          "battery_health_optimization": true,
+          "grid_services_participation": true
+        }
+      }
+    }
+  },
+  "fleet_management": {
+    "ford_pro_intelligence": {
+      "fleet_telematics": true,
+      "uptime_optimization": true,
+      "predictive_maintenance": true,
+      "driver_coaching": true,
+      "route_optimization": true,
+      "energy_management": true
+    },
+    "commercial_features": {
+      "duty_cycle_profiles": ["delivery", "construction", "emergency", "utility"],
+      "load_management": true,
+      "multi_shift_optimization": true,
+      "depot_charging_coordination": true,
+      "energy_cost_allocation": true,
+      "carbon_reporting": true
+    },
+    "enterprise_integration": {
+      "api_access": true,
+      "third_party_integrations": true,
+      "custom_dashboards": true,
+      "bulk_configuration": true,
+      "role_based_access": true
+    }
+  },
+  "regional_compliance": {
+    "north_america": {
+      "standards": ["UL2202", "UL2594", "FCC_Part_15", "ICES_003"],
+      "grid_codes": ["IEEE_1547", "UL1741"],
+      "utility_programs": ["demand_response", "time_of_use", "net_metering"]
+    },
+    "europe": {
+      "standards": ["EN61851", "EN62196", "CE_Marking", "RED_2014_53_EU"],
+      "grid_codes": ["EN50549", "VDE_AR_N_4100"],
+      "regulations": ["GDPR", "WLTP", "EU_Battery_Regulation"]
+    },
+    "china": {
+      "standards": ["GB_T_20234", "GB_T_27930", "CCC_Certification"],
+      "grid_codes": ["GB_T_34014"],
+      "data_localization": true
+    }
+  },
+  "sustainability": {
+    "carbon_tracking": {
+      "lifecycle_assessment": true,
+      "renewable_energy_tracking": true,
+      "carbon_offset_integration": true,
+      "sustainability_scoring": true
+    },
+    "circular_economy": {
+      "battery_second_life": true,
+      "recycling_program": true,
+      "material_passports": true,
+      "end_of_life_planning": true
+    }
+  },
+  "future_readiness": {
+    "technology_roadmap": {
+      "solid_state_battery_ready": true,
+      "wireless_charging_expansion": true,
+      "autonomous_charging": true,
+      "quantum_encryption": true,
+      "6g_connectivity": true
+    },
+    "scalability": {
+      "modular_architecture": true,
+      "api_versioning": true,
+      "backward_compatibility": true,
+      "cloud_native": true,
+      "microservices_ready": true
+    }
+  }
+}

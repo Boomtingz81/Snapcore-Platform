@@ -1,0 +1,580 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Monitor, Play, Pause, Square, Filter, Plus, Trash2, Eye, EyeOff, Settings, Download, Upload, RefreshCw, Activity, Radio, Zap, AlertTriangle, CheckCircle, Clock, BarChart3 } from 'lucide-react';
+
+const MIC3X2XMonitor = () => {
+  const [isMonitoring, setIsMonitoring] = useState(false);
+  const [monitoringMode, setMonitoringMode] = useState('filtered');
+  const [activeFilters, setActiveFilters] = useState({
+    pass: [],
+    block: [],
+    flowControl: []
+  });
+  const [newFilter, setNewFilter] = useState({
+    type: 'pass',
+    pattern: '',
+    mask: '',
+    description: ''
+  });
+  const [busData, setBusData] = useState([]);
+  const [busStats, setBusStats] = useState({
+    totalMessages: 0,
+    messagesPerSecond: 0,
+    uniqueIds: new Set(),
+    protocols: new Set(),
+    errors: 0
+  });
+  const [selectedProtocol, setSelectedProtocol] = useState('CAN');
+  const [canChannel, setCanChannel] = useState('HS_CAN');
+  const [displaySettings, setDisplaySettings] = useState({
+    showHeaders: true,
+    showTimestamps: true,
+    showRaw: false,
+    autoScroll: true,
+    maxMessages: 1000
+  });
+  const [filterPresets, setFilterPresets] = useState([
+    { name: 'OBD Standard', filters: [{ type: 'pass', pattern: '7DF', mask: 'FFF' }, { type: 'pass', pattern: '7E8', mask: 'FF8' }] },
+    { name: 'GM GMLAN', filters: [{ type: 'pass', pattern: '101', mask: 'FFF' }] },
+    { name: 'Ford MS-CAN', filters: [{ type: 'pass', pattern: '720', mask: 'FF0' }] }
+  ]);
+  
+  const messagesRef = useRef(null);
+  const monitoringIntervalRef = useRef(null);
+
+  // Simulate bus monitoring data
+  const simulateBusData = () => {
+    if (!isMonitoring) return;
+
+    const protocols = ['HS_CAN', 'MS_CAN', 'SW_CAN', 'CH_CAN', 'LS_CAN'];
+    const commonIds = ['7DF', '7E8', '7E9', '7EA', '7EB', '101', '201', '301', '720', '730'];
+    const data = [];
+
+    // Generate 3-8 messages per interval
+    const messageCount = Math.floor(Math.random() * 6) + 3;
+    
+    for (let i = 0; i < messageCount; i++) {
+      const id = commonIds[Math.floor(Math.random() * commonIds.length)];
+      const dataBytes = Array.from({ length: 8 }, () => 
+        Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()
+      ).join(' ');
+      
+      const message = {
+        id: Date.now() + i,
+        timestamp: new Date().toLocaleTimeString(),
+        protocol: protocols[Math.floor(Math.random() * protocols.length)],
+        canId: id,
+        data: dataBytes,
+        dlc: 8,
+        direction: Math.random() > 0.7 ? 'TX' : 'RX',
+        filtered: shouldFilterMessage(id)
+      };
+      
+      data.push(message);
+    }
+
+    setBusData(prev => {
+      const newData = [...prev, ...data].slice(-displaySettings.maxMessages);
+      updateStats(newData);
+      return newData;
+    });
+  };
+
+  const shouldFilterMessage = (canId) => {
+    // Check pass filters
+    if (activeFilters.pass.length > 0) {
+      const passes = activeFilters.pass.some(filter => {
+        const pattern = parseInt(filter.pattern, 16);
+        const mask = parseInt(filter.mask, 16);
+        const id = parseInt(canId, 16);
+        return (id & mask) === (pattern & mask);
+      });
+      if (!passes) return true; // Filtered out
+    }
+
+    // Check block filters
+    const blocked = activeFilters.block.some(filter => {
+      const pattern = parseInt(filter.pattern, 16);
+      const mask = parseInt(filter.mask, 16);
+      const id = parseInt(canId, 16);
+      return (id & mask) === (pattern & mask);
+    });
+    
+    return blocked;
+  };
+
+  const updateStats = (messages) => {
+    const now = Date.now();
+    const recentMessages = messages.filter(msg => 
+      now - new Date(`1970-01-01T${msg.timestamp}Z`).getTime() < 1000
+    );
+    
+    setBusStats({
+      totalMessages: messages.length,
+      messagesPerSecond: recentMessages.length,
+      uniqueIds: new Set(messages.map(msg => msg.canId)),
+      protocols: new Set(messages.map(msg => msg.protocol)),
+      errors: messages.filter(msg => msg.error).length
+    });
+  };
+
+  const startMonitoring = () => {
+    setIsMonitoring(true);
+    setBusData([]);
+    monitoringIntervalRef.current = setInterval(simulateBusData, 200);
+  };
+
+  const stopMonitoring = () => {
+    setIsMonitoring(false);
+    if (monitoringIntervalRef.current) {
+      clearInterval(monitoringIntervalRef.current);
+    }
+  };
+
+  const addFilter = () => {
+    if (!newFilter.pattern) return;
+
+    const filter = {
+      id: Date.now(),
+      ...newFilter,
+      pattern: newFilter.pattern.toUpperCase(),
+      mask: newFilter.mask.toUpperCase() || 'FFF'
+    };
+
+    setActiveFilters(prev => ({
+      ...prev,
+      [newFilter.type]: [...prev[newFilter.type], filter]
+    }));
+
+    setNewFilter({
+      type: 'pass',
+      pattern: '',
+      mask: '',
+      description: ''
+    });
+  };
+
+  const removeFilter = (type, filterId) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [type]: prev[type].filter(f => f.id !== filterId)
+    }));
+  };
+
+  const loadFilterPreset = (preset) => {
+    const filters = { pass: [], block: [], flowControl: [] };
+    
+    preset.filters.forEach((filter, index) => {
+      filters[filter.type].push({
+        id: Date.now() + index,
+        ...filter,
+        description: `${preset.name} filter`
+      });
+    });
+
+    setActiveFilters(filters);
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters({ pass: [], block: [], flowControl: [] });
+  };
+
+  const exportData = () => {
+    const dataStr = JSON.stringify(busData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `mic3x2x_bus_data_${new Date().toISOString()}.json`;
+    link.click();
+  };
+
+  const getTotalFilterCount = () => {
+    return activeFilters.pass.length + activeFilters.block.length + activeFilters.flowControl.length;
+  };
+
+  const getFilterTypeColor = (type) => {
+    const colors = {
+      pass: 'bg-green-100 text-green-800',
+      block: 'bg-red-100 text-red-800',
+      flowControl: 'bg-blue-100 text-blue-800'
+    };
+    return colors[type];
+  };
+
+  useEffect(() => {
+    return () => {
+      if (monitoringIntervalRef.current) {
+        clearInterval(monitoringIntervalRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (displaySettings.autoScroll && messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  }, [busData, displaySettings.autoScroll]);
+
+  const FilterBadge = ({ filter, type, onRemove }) => (
+    <div className={`flex items-center gap-2 p-2 rounded-lg ${getFilterTypeColor(type)}`}>
+      <div className="flex-1">
+        <div className="font-mono text-sm">{filter.pattern}/{filter.mask}</div>
+        {filter.description && (
+          <div className="text-xs opacity-75">{filter.description}</div>
+        )}
+      </div>
+      <button
+        onClick={() => onRemove(type, filter.id)}
+        className="text-red-600 hover:text-red-800"
+      >
+        <Trash2 className="w-3 h-3" />
+      </button>
+    </div>
+  );
+
+  const StatCard = ({ icon: Icon, label, value, unit = '', color = 'blue' }) => (
+    <div className="bg-white p-4 rounded-lg border">
+      <div className="flex items-center gap-3">
+        <Icon className={`w-6 h-6 text-${color}-600`} />
+        <div>
+          <div className="text-sm text-gray-600">{label}</div>
+          <div className={`text-xl font-bold text-${color}-600`}>
+            {value}{unit}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Monitor className="w-8 h-8 text-blue-600" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">MIC3X2X Enhanced Monitor</h1>
+              <p className="text-gray-600">Advanced bus monitoring with 208 filter support</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+              isMonitoring ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+            }`}>
+              {isMonitoring ? 'MONITORING' : 'STOPPED'}
+            </div>
+            <div className="text-sm text-gray-600">
+              Filters: {getTotalFilterCount()}/208
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Control Panel */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Monitor Controls */}
+          <div>
+            <h3 className="font-semibold mb-3">Monitor Controls</h3>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={startMonitoring}
+                  disabled={isMonitoring}
+                  className="flex items-center gap-1 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Play className="w-4 h-4" />
+                  Start
+                </button>
+                <button
+                  onClick={stopMonitoring}
+                  disabled={!isMonitoring}
+                  className="flex items-center gap-1 px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Square className="w-4 h-4" />
+                  Stop
+                </button>
+              </div>
+              <select
+                value={monitoringMode}
+                onChange={(e) => setMonitoringMode(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm"
+              >
+                <option value="all">Monitor All (ATMA)</option>
+                <option value="filtered">Monitor Filtered (VTMFCA)</option>
+                <option value="protocol">Protocol Specific</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Protocol Selection */}
+          <div>
+            <h3 className="font-semibold mb-3">Protocol & Channel</h3>
+            <div className="space-y-2">
+              <select
+                value={selectedProtocol}
+                onChange={(e) => setSelectedProtocol(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm"
+              >
+                <option value="CAN">CAN Bus</option>
+                <option value="ISO">ISO/KWP</option>
+                <option value="J1850">J1850</option>
+                <option value="J1939">J1939</option>
+              </select>
+              {selectedProtocol === 'CAN' && (
+                <select
+                  value={canChannel}
+                  onChange={(e) => setCanChannel(e.target.value)}
+                  className="w-full border rounded px-3 py-2 text-sm"
+                >
+                  <option value="HS_CAN">HS-CAN (500K)</option>
+                  <option value="MS_CAN">MS-CAN (125K)</option>
+                  <option value="SW_CAN">SW-CAN (33.3K)</option>
+                  <option value="CH_CAN">CH-CAN (500K)</option>
+                  <option value="LS_CAN">LS-CAN (Variable)</option>
+                </select>
+              )}
+            </div>
+          </div>
+
+          {/* Add Filter */}
+          <div>
+            <h3 className="font-semibold mb-3">Add Filter</h3>
+            <div className="space-y-2">
+              <select
+                value={newFilter.type}
+                onChange={(e) => setNewFilter(prev => ({ ...prev, type: e.target.value }))}
+                className="w-full border rounded px-3 py-2 text-sm"
+              >
+                <option value="pass">Pass Filter</option>
+                <option value="block">Block Filter</option>
+                <option value="flowControl">Flow Control</option>
+              </select>
+              <div className="flex gap-1">
+                <input
+                  type="text"
+                  placeholder="Pattern (hex)"
+                  value={newFilter.pattern}
+                  onChange={(e) => setNewFilter(prev => ({ ...prev, pattern: e.target.value }))}
+                  className="flex-1 border rounded px-2 py-1 text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Mask"
+                  value={newFilter.mask}
+                  onChange={(e) => setNewFilter(prev => ({ ...prev, mask: e.target.value }))}
+                  className="w-16 border rounded px-2 py-1 text-sm"
+                />
+              </div>
+              <input
+                type="text"
+                placeholder="Description (optional)"
+                value={newFilter.description}
+                onChange={(e) => setNewFilter(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full border rounded px-2 py-1 text-sm"
+              />
+              <button
+                onClick={addFilter}
+                className="w-full flex items-center justify-center gap-1 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+              >
+                <Plus className="w-3 h-3" />
+                Add Filter
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Presets */}
+          <div>
+            <h3 className="font-semibold mb-3">Filter Presets</h3>
+            <div className="space-y-2">
+              {filterPresets.map((preset, index) => (
+                <button
+                  key={index}
+                  onClick={() => loadFilterPreset(preset)}
+                  className="w-full text-left p-2 border rounded hover:bg-gray-50 text-sm"
+                >
+                  <div className="font-medium">{preset.name}</div>
+                  <div className="text-xs text-gray-600">{preset.filters.length} filters</div>
+                </button>
+              ))}
+              <button
+                onClick={clearAllFilters}
+                className="w-full flex items-center justify-center gap-1 px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+              >
+                <Trash2 className="w-3 h-3" />
+                Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon={Activity} label="Total Messages" value={busStats.totalMessages} color="blue" />
+        <StatCard icon={Zap} label="Messages/sec" value={busStats.messagesPerSecond} color="green" />
+        <StatCard icon={Radio} label="Unique IDs" value={busStats.uniqueIds.size} color="purple" />
+        <StatCard icon={AlertTriangle} label="Errors" value={busStats.errors} color="red" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Active Filters */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Active Filters ({getTotalFilterCount()}/208)</h3>
+            <button
+              onClick={exportData}
+              className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
+            >
+              <Download className="w-3 h-3" />
+              Export
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {/* Pass Filters */}
+            {activeFilters.pass.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-green-700 mb-2">
+                  Pass Filters ({activeFilters.pass.length})
+                </h4>
+                <div className="space-y-2">
+                  {activeFilters.pass.map(filter => (
+                    <FilterBadge
+                      key={filter.id}
+                      filter={filter}
+                      type="pass"
+                      onRemove={removeFilter}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Block Filters */}
+            {activeFilters.block.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-red-700 mb-2">
+                  Block Filters ({activeFilters.block.length})
+                </h4>
+                <div className="space-y-2">
+                  {activeFilters.block.map(filter => (
+                    <FilterBadge
+                      key={filter.id}
+                      filter={filter}
+                      type="block"
+                      onRemove={removeFilter}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Flow Control Filters */}
+            {activeFilters.flowControl.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-blue-700 mb-2">
+                  Flow Control Filters ({activeFilters.flowControl.length})
+                </h4>
+                <div className="space-y-2">
+                  {activeFilters.flowControl.map(filter => (
+                    <FilterBadge
+                      key={filter.id}
+                      filter={filter}
+                      type="flowControl"
+                      onRemove={removeFilter}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {getTotalFilterCount() === 0 && (
+              <div className="text-center text-gray-500 py-8">
+                <Filter className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No filters active</p>
+                <p className="text-sm">Add filters to control message display</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bus Messages */}
+        <div className="lg:col-span-2 bg-white rounded-lg shadow">
+          <div className="p-4 border-b">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Bus Messages</h3>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={displaySettings.autoScroll}
+                    onChange={(e) => setDisplaySettings(prev => ({ ...prev, autoScroll: e.target.checked }))}
+                  />
+                  Auto-scroll
+                </label>
+                <label className="flex items-center gap-1 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={displaySettings.showHeaders}
+                    onChange={(e) => setDisplaySettings(prev => ({ ...prev, showHeaders: e.target.checked }))}
+                  />
+                  Headers
+                </label>
+                <button
+                  onClick={() => setBusData([])}
+                  className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Clear
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div 
+            ref={messagesRef}
+            className="h-96 overflow-y-auto font-mono text-sm"
+          >
+            {busData.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="text-center">
+                  <Monitor className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No bus data</p>
+                  <p className="text-xs">Start monitoring to see messages</p>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 space-y-1">
+                {busData.filter(msg => monitoringMode === 'all' || !msg.filtered).map(message => (
+                  <div
+                    key={message.id}
+                    className={`flex items-center gap-4 p-2 rounded text-xs ${
+                      message.direction === 'TX' ? 'bg-blue-50' : 'bg-gray-50'
+                    } ${message.filtered ? 'opacity-50' : ''}`}
+                  >
+                    {displaySettings.showTimestamps && (
+                      <span className="text-gray-500 w-20">{message.timestamp}</span>
+                    )}
+                    <span className={`w-12 px-2 py-1 rounded text-xs font-medium ${
+                      message.direction === 'TX' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                      {message.direction}
+                    </span>
+                    <span className="w-16 text-purple-600">{message.protocol}</span>
+                    <span className="w-12 font-bold">{message.canId}</span>
+                    <span className="flex-1 font-mono">{message.data}</span>
+                    <span className="w-8 text-gray-500">DLC:{message.dlc}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MIC3X2XMonitor;

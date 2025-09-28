@@ -1,0 +1,571 @@
+{
+  "policy_id": "psa_stellantis_precfd_v2.0",
+  "schema_version": "2.0.0",
+  "vlink_version": "3.2.1",
+  "metadata": {
+    "name": "PSA/Stellantis Pre-CFD Enhanced Charging Policy",
+    "description": "Enhanced vlink MS compatible charging policy for PSA/Stellantis pre-Charge Flow Diagram EVs and PHEVs with improved diagnostics and error handling",
+    "manufacturer": "stellantis",
+    "manufacturer_groups": ["psa", "opel_vauxhall", "fca", "ds_automobiles"],
+    "policy_type": "production",
+    "created": "2024-01-15T10:00:00Z",
+    "updated": "2025-08-25T14:30:00Z",
+    "version_notes": "Enhanced error handling, improved diagnostics, extended vehicle support",
+    "maintainer": "snapcore_team",
+    "certification_level": "tier1_validated"
+  },
+  "vehicle_identification": {
+    "vin_patterns": {
+      "peugeot": ["VF3*", "VF7*"],
+      "citroen": ["VF7*", "VF3*"],
+      "opel_vauxhall": ["W0L*", "W0V*"],
+      "ds": ["VF3*"],
+      "fca": ["ZFA*", "ZAR*"],
+      "jeep_ram": ["1C4*", "3C4*", "1C6*"],
+      "fiat": ["ZFA*"],
+      "alfa_romeo": ["ZAR*"]
+    },
+    "supported_models": [
+      {
+        "model": "PEUGEOT_E_208",
+        "internal_code": "P21A",
+        "year_range": [2019, 2024],
+        "trims": ["Active", "Allure", "GT"],
+        "platform": "CMP",
+        "battery_variants": ["50kWh"],
+        "production_status": "active"
+      },
+      {
+        "model": "PEUGEOT_E_2008",
+        "internal_code": "P24A",
+        "year_range": [2020, 2024],
+        "trims": ["Active", "Allure", "GT"],
+        "platform": "CMP",
+        "battery_variants": ["50kWh"],
+        "production_status": "active"
+      },
+      {
+        "model": "CITROEN_E_C4",
+        "internal_code": "C41A",
+        "year_range": [2020, 2024],
+        "trims": ["Feel", "Shine", "Shine_Plus"],
+        "platform": "CMP",
+        "battery_variants": ["50kWh"],
+        "production_status": "active"
+      },
+      {
+        "model": "OPEL_CORSA_E",
+        "internal_code": "F74A",
+        "year_range": [2019, 2024],
+        "trims": ["Edition", "Elegance", "Ultimate"],
+        "platform": "CMP",
+        "battery_variants": ["50kWh"],
+        "production_status": "active"
+      },
+      {
+        "model": "DS3_CROSSBACK_E_TENSE",
+        "internal_code": "D34A",
+        "year_range": [2019, 2024],
+        "trims": ["Performance_Line", "Opera", "Grand_Chic"],
+        "platform": "CMP",
+        "battery_variants": ["50kWh"],
+        "production_status": "discontinued"
+      },
+      {
+        "model": "JEEP_WRANGLER_4XE",
+        "internal_code": "JL74",
+        "year_range": [2021, 2024],
+        "trims": ["Sport", "Sahara", "Rubicon", "High_Altitude"],
+        "platform": "JL",
+        "battery_variants": ["17.3kWh"],
+        "production_status": "active",
+        "vehicle_type": "PHEV"
+      },
+      {
+        "model": "JEEP_GRAND_CHEROKEE_4XE",
+        "internal_code": "WL74",
+        "year_range": [2022, 2024],
+        "trims": ["Limited", "Overland", "Summit"],
+        "platform": "WL",
+        "battery_variants": ["17.3kWh"],
+        "production_status": "active",
+        "vehicle_type": "PHEV"
+      }
+    ],
+    "battery_technologies": {
+      "17.3kWh": {
+        "chemistry": "NCM811",
+        "supplier": "Samsung_SDI",
+        "cell_format": "pouch",
+        "nominal_voltage": 400,
+        "cell_count": 96,
+        "module_count": 8
+      },
+      "50kWh": {
+        "chemistry": "NCM622",
+        "supplier": "CATL",
+        "cell_format": "pouch",
+        "nominal_voltage": 400,
+        "cell_count": 144,
+        "module_count": 12
+      }
+    }
+  },
+  "vlink_parameters": {
+    "session_management": {
+      "max_session_duration": 540,
+      "idle_timeout": 360,
+      "heartbeat_interval": 30,
+      "session_recovery_timeout": 120,
+      "authentication_required": true,
+      "security_level": "high",
+      "app_integrations": {
+        "myPeugeot": {"enabled": true, "api_version": "2.1"},
+        "myCitroen": {"enabled": true, "api_version": "2.1"},
+        "myOpel": {"enabled": true, "api_version": "2.0"},
+        "myDS": {"enabled": true, "api_version": "1.9"},
+        "uconnect": {"enabled": true, "api_version": "4.0"}
+      }
+    },
+    "communication_stack": {
+      "primary_protocol": "ISO15118-2",
+      "fallback_protocols": ["DIN70121", "IEC61851-1"],
+      "protocol_negotiation_timeout": 45,
+      "plug_lock_support": true,
+      "cable_check_required": true,
+      "pnc_support": false,
+      "psa_proprietary_diagnostics": true,
+      "diagnostic_protocols": ["UDS_ISO14229", "KWP2000"],
+      "security_features": {
+        "certificate_validation": true,
+        "encrypted_communication": true,
+        "replay_protection": true
+      }
+    }
+  },
+  "charging_profile": {
+    "ac_charging": {
+      "single_phase": {
+        "max_current": 32,
+        "max_voltage": 230,
+        "max_power": 7400,
+        "frequency": 50,
+        "efficiency": 0.92
+      },
+      "three_phase": {
+        "max_current": 32,
+        "max_voltage": 400,
+        "max_power": 11000,
+        "frequency": 50,
+        "efficiency": 0.94,
+        "phase_balancing": true
+      },
+      "adaptive_features": {
+        "psa_adaptive_charging": true,
+        "temperature_compensation": true,
+        "grid_frequency_regulation": true,
+        "power_factor_correction": 0.95
+      }
+    },
+    "dc_charging": {
+      "specifications": {
+        "max_current": 125,
+        "max_voltage": 500,
+        "max_power": 100000,
+        "min_voltage": 150,
+        "efficiency": 0.96
+      },
+      "charging_curves": {
+        "50kwh_ncm622": {
+          "curve_type": "psa_optimized_v2",
+          "battery_capacity": 50.0,
+          "usable_capacity": 45.0,
+          "segments": [
+            {
+              "soc_start": 0,
+              "soc_end": 10,
+              "max_power": 50000,
+              "temperature_factor": 0.8,
+              "notes": "Cold battery protection"
+            },
+            {
+              "soc_start": 10,
+              "soc_end": 20,
+              "max_power": 78000,
+              "temperature_factor": 1.0,
+              "notes": "Ramp up phase"
+            },
+            {
+              "soc_start": 20,
+              "soc_end": 50,
+              "max_power": 100000,
+              "temperature_factor": 1.0,
+              "notes": "Peak power phase"
+            },
+            {
+              "soc_start": 50,
+              "soc_end": 70,
+              "max_power": 85000,
+              "temperature_factor": 1.0,
+              "notes": "High efficiency phase"
+            },
+            {
+              "soc_start": 70,
+              "soc_end": 80,
+              "max_power": 50000,
+              "temperature_factor": 0.95,
+              "notes": "Battery protection phase"
+            },
+            {
+              "soc_start": 80,
+              "soc_end": 90,
+              "max_power": 25000,
+              "temperature_factor": 0.9,
+              "notes": "CV transition phase"
+            },
+            {
+              "soc_start": 90,
+              "soc_end": 100,
+              "max_power": 10000,
+              "temperature_factor": 0.85,
+              "notes": "Top-off phase"
+            }
+          ],
+          "thermal_management": {
+            "active_cooling": true,
+            "preconditioning": true,
+            "thermal_limits": {
+              "max_cell_temp": 45,
+              "min_cell_temp": 0,
+              "derating_threshold": 42
+            }
+          }
+        },
+        "17kwh_ncm811": {
+          "curve_type": "phev_conservative",
+          "battery_capacity": 17.3,
+          "usable_capacity": 14.0,
+          "dc_charging_disabled": true,
+          "ac_only_charging": true
+        }
+      }
+    }
+  },
+  "safety_systems": {
+    "temperature_management": {
+      "battery_limits": {
+        "min_temp_c": -25,
+        "max_temp_c": 50,
+        "derating_threshold_c": 45,
+        "critical_shutdown_c": 55,
+        "hysteresis_c": 2
+      },
+      "thermal_systems": {
+        "active_thermal_management": true,
+        "air_cooling_system": true,
+        "liquid_cooling_available": false,
+        "cabin_heat_pump": true,
+        "battery_heater": true,
+        "preconditioning_support": true
+      }
+    },
+    "electrical_safety": {
+      "voltage_monitoring": {
+        "isolation_resistance_min_kohm": 100,
+        "insulation_monitoring": true,
+        "high_voltage_safety_interlock": true,
+        "pyrotechnic_disconnect": true,
+        "contactor_redundancy": "dual_redundant"
+      },
+      "current_protection": {
+        "overcurrent_protection": true,
+        "ground_fault_detection": true,
+        "differential_protection": true,
+        "arc_fault_detection": false,
+        "short_circuit_protection": true,
+        "current_sensor_redundancy": true
+      }
+    },
+    "functional_safety": {
+      "safety_integrity_level": "ASIL_C",
+      "watchdog_systems": true,
+      "fail_safe_mechanisms": true,
+      "diagnostic_coverage": 0.95,
+      "safety_goals": [
+        "prevent_thermal_runaway",
+        "prevent_electrical_shock",
+        "prevent_fire_hazard",
+        "ensure_emergency_shutdown"
+      ]
+    }
+  },
+  "vlink_telemetry": {
+    "reporting_configuration": {
+      "base_interval_ms": 1500,
+      "high_frequency_interval_ms": 500,
+      "error_burst_interval_ms": 100,
+      "data_compression": true,
+      "encryption_enabled": true
+    },
+    "parameter_sets": {
+      "standard_telemetry": [
+        "soc",
+        "soh",
+        "voltage_pack",
+        "current_pack",
+        "power_instantaneous",
+        "battery_temp_min",
+        "battery_temp_max",
+        "battery_temp_avg",
+        "ambient_temp",
+        "energy_delivered_session",
+        "energy_delivered_total",
+        "charging_time_elapsed",
+        "estimated_time_remaining",
+        "range_estimate_wltp",
+        "energy_consumption_avg"
+      ],
+      "diagnostic_telemetry": [
+        "cell_voltages",
+        "cell_temperatures",
+        "contactor_status",
+        "isolation_resistance",
+        "bms_status",
+        "charger_status",
+        "thermal_system_status",
+        "dtc_active_count",
+        "dtc_pending_count"
+      ],
+      "safety_telemetry": [
+        "emergency_stop_status",
+        "ground_fault_detected",
+        "overcurrent_events",
+        "temperature_warnings",
+        "insulation_warnings",
+        "safety_interlock_status"
+      ]
+    }
+  },
+  "error_handling": {
+    "retry_strategies": {
+      "communication_errors": {
+        "max_attempts": 3,
+        "backoff_strategy": "exponential",
+        "initial_delay_ms": 1000,
+        "max_delay_ms": 10000
+      },
+      "charging_errors": {
+        "max_attempts": 2,
+        "backoff_strategy": "linear",
+        "initial_delay_ms": 5000
+      },
+      "safety_errors": {
+        "max_attempts": 1,
+        "immediate_shutdown": true,
+        "manual_reset_required": true
+      }
+    },
+    "error_recovery": {
+      "timeout_ms": 45000,
+      "auto_recovery_enabled": true,
+      "recovery_procedures": {
+        "communication_lost": "restart_session",
+        "overcurrent_detected": "reduce_power_retry",
+        "overtemperature": "cool_down_wait",
+        "ground_fault": "immediate_stop"
+      }
+    },
+    "diagnostic_protocols": {
+      "psa_diagnostic_enabled": true,
+      "stellantis_global_diagnostics": true,
+      "uds_support": true,
+      "kwp2000_legacy_support": true
+    }
+  },
+  "load_management": {
+    "grid_integration": {
+      "priority_level": "normal",
+      "load_balancing_support": true,
+      "demand_response_capable": false,
+      "smart_charging_level": "basic_plus",
+      "grid_services": {
+        "frequency_regulation": false,
+        "voltage_support": false,
+        "peak_shaving": true
+      }
+    },
+    "power_management": {
+      "dynamic_power_allocation": true,
+      "temperature_based_derating": true,
+      "grid_condition_monitoring": true,
+      "power_quality_requirements": {
+        "thd_current_max": 0.05,
+        "power_factor_min": 0.95,
+        "flicker_compliance": "IEC61000-3-3"
+      }
+    }
+  },
+  "manufacturer_specifics": {
+    "platform_details": {
+      "supported_platforms": {
+        "CMP": {
+          "description": "Common Modular Platform",
+          "vehicles": ["e-208", "e-2008", "e-C4", "Corsa-e", "DS3"],
+          "battery_supplier": "CATL",
+          "motor_supplier": "Valeo_Siemens",
+          "charging_system": "Valeo"
+        },
+        "JL": {
+          "description": "Jeep Wrangler Platform",
+          "vehicles": ["Wrangler 4xe"],
+          "battery_supplier": "Samsung_SDI",
+          "motor_supplier": "ZF",
+          "charging_system": "Lear"
+        },
+        "WL": {
+          "description": "Jeep Grand Cherokee Platform",
+          "vehicles": ["Grand Cherokee 4xe"],
+          "battery_supplier": "Samsung_SDI",
+          "motor_supplier": "ZF",
+          "charging_system": "Lear"
+        }
+      }
+    },
+    "can_diagnostics": {
+      "gateway_configuration": {
+        "primary_gateway": "BSI",
+        "secondary_gateways": ["BCM", "TCU"],
+        "baud_rate": 500000,
+        "can_fd_support": false
+      },
+      "critical_message_ids": {
+        "bms_soc": {"id": "0x5D7", "dlc": 8, "cycle_ms": 100},
+        "bms_voltage": {"id": "0x5D8", "dlc": 8, "cycle_ms": 100},
+        "bms_current": {"id": "0x5D9", "dlc": 8, "cycle_ms": 100},
+        "bms_temperatures": {"id": "0x5DA", "dlc": 8, "cycle_ms": 500},
+        "charger_status": {"id": "0x638", "dlc": 8, "cycle_ms": 200},
+        "charging_inlet": {"id": "0x639", "dlc": 8, "cycle_ms": 1000},
+        "thermal_management": {"id": "0x63A", "dlc": 8, "cycle_ms": 500},
+        "safety_status": {"id": "0x63B", "dlc": 8, "cycle_ms": 50}
+      },
+      "uds_addressing": {
+        "bms_ecu": "0x7E4",
+        "charger_ecu": "0x7E5",
+        "thermal_ecu": "0x7E6",
+        "gateway_ecu": "0x7DF"
+      }
+    },
+    "vehicle_configurations": {
+      "peugeot_e208_50kwh": {
+        "battery_capacity_kwh": 50.0,
+        "usable_capacity_kwh": 45.0,
+        "max_dc_power_w": 100000,
+        "max_ac_power_w": 11000,
+        "wltp_range_km": 340,
+        "drag_coefficient": 0.29,
+        "curb_weight_kg": 1455,
+        "charging_port_location": "left_rear"
+      },
+      "peugeot_e2008_50kwh": {
+        "battery_capacity_kwh": 50.0,
+        "usable_capacity_kwh": 45.0,
+        "max_dc_power_w": 100000,
+        "max_ac_power_w": 11000,
+        "wltp_range_km": 320,
+        "drag_coefficient": 0.30,
+        "curb_weight_kg": 1538,
+        "charging_port_location": "left_rear"
+      },
+      "jeep_wrangler_4xe": {
+        "battery_capacity_kwh": 17.3,
+        "usable_capacity_kwh": 14.0,
+        "max_dc_power_w": 0,
+        "max_ac_power_w": 7400,
+        "epa_ev_range_miles": 22,
+        "total_range_miles": 370,
+        "towing_capacity_lbs": 3500,
+        "curb_weight_kg": 2391,
+        "charging_port_location": "left_front"
+      }
+    },
+    "charging_behavior": {
+      "charging_modes": {
+        "immediate": {
+          "start_behavior": "plug_in_start",
+          "target_soc": 100,
+          "power_profile": "maximum_available",
+          "priority": "speed"
+        },
+        "delayed": {
+          "start_behavior": "scheduled_start",
+          "target_soc": 80,
+          "departure_time_based": true,
+          "smart_finish": true,
+          "priority": "cost_optimization"
+        },
+        "eco": {
+          "start_behavior": "off_peak_hours",
+          "target_soc": 80,
+          "power_profile": "grid_friendly",
+          "renewable_energy_preference": true,
+          "priority": "environmental"
+        }
+      },
+      "preconditioning": {
+        "cabin_preconditioning": true,
+        "battery_preconditioning": true,
+        "scheduled_preconditioning": true,
+        "remote_activation": true
+      }
+    }
+  },
+  "regional_compliance": {
+    "europe": {
+      "connectors": {
+        "ac": "Type2_IEC62196",
+        "dc": "CCS2_Combo",
+        "emergency": "CEE_Schuko"
+      },
+      "grid_standards": ["EN50160", "IEC61851-1"],
+      "safety_standards": ["ECE_R100", "ISO17409"],
+      "emc_standards": ["ECE_R10", "CISPR_25"]
+    },
+    "north_america": {
+      "connectors": {
+        "ac": "SAE_J1772",
+        "dc": "CCS1_Combo",
+        "emergency": "NEMA_5_15"
+      },
+      "grid_standards": ["IEEE_1547", "UL2202"],
+      "safety_standards": ["FMVSS_305", "SAE_J2929"],
+      "emc_standards": ["SAE_J551", "FCC_Part15"]
+    }
+  },
+  "testing_validation": {
+    "test_procedures": {
+      "charging_performance": ["IEC61851-23", "ISO15118-4"],
+      "safety_validation": ["ISO26262", "IEC61508"],
+      "emc_testing": ["CISPR25", "ISO11452"],
+      "environmental": ["ISO16750", "SAE_J1211"]
+    },
+    "validation_status": {
+      "lab_tested": true,
+      "field_validated": true,
+      "production_approved": true,
+      "certification_complete": true
+    }
+  },
+  "maintenance_support": {
+    "diagnostic_capabilities": {
+      "real_time_monitoring": true,
+      "predictive_maintenance": true,
+      "remote_diagnostics": true,
+      "over_air_updates": true
+    },
+    "service_intervals": {
+      "policy_review_months": 12,
+      "calibration_check_months": 24,
+      "safety_inspection_months": 12
+    }
+  }
+} 

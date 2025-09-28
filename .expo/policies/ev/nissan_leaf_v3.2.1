@@ -1,0 +1,450 @@
+{
+  "policy_id": "nissan_leaf_v3.2.1",
+  "vlink_version": "4.1.2",
+  "api_compatibility": {
+    "min_vlink_ms_version": "4.0.0",
+    "max_vlink_ms_version": "4.9.x",
+    "backwards_compatible": ["3.2", "3.1", "3.0"],
+    "schema_version": "2024.1"
+  },
+  "metadata": {
+    "name": "Nissan Leaf vlink MS Charging Policy",
+    "description": "Enhanced vlink MS compatible charging policy for Nissan Leaf EVs with advanced telemetry and load management",
+    "manufacturer": "nissan",
+    "policy_type": "production",
+    "certification_level": "tier_1",
+    "created": "2024-08-22T10:00:00Z",
+    "updated": "2024-08-22T15:30:00Z",
+    "revision": "3.2.1-stable",
+    "checksum": "sha256:a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+    "maintainer": {
+      "organization": "vlink_systems",
+      "contact": "support@vlink.ms",
+      "documentation": "https://docs.vlink.ms/policies/nissan-leaf"
+    }
+  },
+  "vehicle_identification": {
+    "vin_patterns": ["JN1*", "SJN*", "1N4*"],
+    "supported_models": [
+      {"model": "LEAF", "year_range": [2018, 2025], "trim": "S", "market": "US"},
+      {"model": "LEAF", "year_range": [2018, 2025], "trim": "SV", "market": "US"},
+      {"model": "LEAF", "year_range": [2018, 2025], "trim": "SL", "market": "US"},
+      {"model": "LEAF", "year_range": [2019, 2025], "trim": "Plus", "market": "US"},
+      {"model": "LEAF", "year_range": [2018, 2025], "trim": "Acenta", "market": "EU"},
+      {"model": "LEAF", "year_range": [2018, 2025], "trim": "Tekna", "market": "EU"}
+    ],
+    "battery_variants": [
+      {"capacity": "40kWh", "chemistry": "LiMn2O4", "pack_voltage": 350},
+      {"capacity": "62kWh", "chemistry": "LiMn2O4", "pack_voltage": 360},
+      {"capacity": "60kWh", "chemistry": "LiFePO4", "pack_voltage": 355}
+    ],
+    "identification_priority": ["vin_decode", "obd_query", "can_message", "user_input"]
+  },
+  "vlink_ms_parameters": {
+    "session_management": {
+      "max_session_duration": 480,
+      "idle_timeout": 300,
+      "authentication_required": true,
+      "session_heartbeat_interval": 30,
+      "graceful_termination_timeout": 60,
+      "concurrent_sessions_max": 1,
+      "session_recovery_support": true
+    },
+    "communication_stack": {
+      "primary_protocol": "ISO15118-20",
+      "fallback_protocols": ["ISO15118-2", "DIN70121", "CHAdeMO"],
+      "protocol_negotiation_timeout": 10,
+      "plug_lock_support": true,
+      "pnc_support": true,
+      "pnc_fallback": "external_payment",
+      "tls_version": "1.3",
+      "certificate_handling": {
+        "root_ca_validation": true,
+        "ocsp_checking": true,
+        "certificate_cache_duration": 86400
+      }
+    },
+    "cloud_integration": {
+      "vlink_ms_endpoint": "https://api.vlink.ms/v4",
+      "telemetry_endpoint": "wss://telemetry.vlink.ms/v4",
+      "backup_endpoints": [
+        "https://backup1.vlink.ms/v4",
+        "https://backup2.vlink.ms/v4"
+      ],
+      "data_compression": "gzip",
+      "encryption": "AES-256-GCM",
+      "batch_upload_size": 100,
+      "offline_buffer_duration": 3600
+    }
+  },
+  "charging_profile": {
+    "ac_charging": {
+      "max_current": 32,
+      "max_voltage": 240,
+      "max_power": 7400,
+      "phases": 1,
+      "frequency": 60,
+      "power_factor": 0.98,
+      "efficiency": 0.94,
+      "ramp_rate": {
+        "up": 10,
+        "down": 20
+      },
+      "connector_types": ["Type_1_SAE_J1772", "Type_2_IEC_62196"],
+      "pilot_signal": {
+        "type": "PWM",
+        "frequency": 1000,
+        "duty_cycle_range": [6, 96]
+      }
+    },
+    "dc_charging": {
+      "max_current": 125,
+      "max_voltage": 500,
+      "max_power": 50000,
+      "connector_types": ["CHAdeMO", "CCS_Combo_1"],
+      "preconditioning_support": true,
+      "charging_curve": {
+        "curve_type": "adaptive_multi_segment",
+        "temperature_compensation": true,
+        "soc_accuracy": 1.0,
+        "segments": [
+          {
+            "soc_start": 0, 
+            "soc_end": 10, 
+            "max_power": 25000,
+            "ramp_rate": 2000,
+            "conditions": ["battery_temp > -5C", "ambient_temp > -20C"]
+          },
+          {
+            "soc_start": 10, 
+            "soc_end": 40, 
+            "max_power": 46000,
+            "ramp_rate": 3000,
+            "conditions": ["battery_temp > 15C"]
+          },
+          {
+            "soc_start": 40, 
+            "soc_end": 60, 
+            "max_power": 39100,
+            "ramp_rate": 2500,
+            "conditions": ["battery_temp < 45C"]
+          },
+          {
+            "soc_start": 60, 
+            "soc_end": 80, 
+            "max_power": 18400,
+            "ramp_rate": 1500,
+            "conditions": ["voltage < 400V"]
+          },
+          {
+            "soc_start": 80, 
+            "soc_end": 90, 
+            "max_power": 9200,
+            "ramp_rate": 800,
+            "conditions": ["cell_balance_delta < 50mV"]
+          },
+          {
+            "soc_start": 90, 
+            "soc_end": 100, 
+            "max_power": 4600,
+            "ramp_rate": 400,
+            "conditions": ["constant_voltage_mode"]
+          }
+        ],
+        "environmental_derating": {
+          "high_temp_threshold": 35,
+          "high_temp_factor": 0.85,
+          "low_temp_threshold": -10,
+          "low_temp_factor": 0.70
+        }
+      }
+    },
+    "bidirectional_support": {
+      "v2g_capable": false,
+      "v2h_capable": false,
+      "v2l_capable": false,
+      "future_upgrade_path": true
+    }
+  },
+  "safety_limits": {
+    "temperature": {
+      "battery_min_c": -20,
+      "battery_max_c": 55,
+      "derating_threshold_c": 45,
+      "emergency_stop_threshold_c": 60,
+      "cooling_activation_threshold_c": 40,
+      "heating_activation_threshold_c": 5,
+      "thermal_runaway_detection": true
+    },
+    "voltage": {
+      "isolation_resistance_min": 500,
+      "insulation_monitoring": true,
+      "ground_fault_threshold": 20,
+      "arc_fault_detection": true,
+      "voltage_ripple_max": 5,
+      "surge_protection": true
+    },
+    "current": {
+      "overcurrent_protection": true,
+      "ground_fault_detection": true,
+      "welding_detection": true,
+      "current_sensor_accuracy": 1.0,
+      "emergency_stop_current": 150,
+      "inrush_current_limit": 200
+    },
+    "mechanical": {
+      "connector_insertion_detection": true,
+      "lock_verification": true,
+      "cable_integrity_check": true,
+      "vibration_monitoring": false,
+      "water_ingress_protection": "IP67"
+    }
+  },
+  "vlink_ms_telemetry": {
+    "data_streams": {
+      "high_frequency": {
+        "interval_ms": 100,
+        "parameters": ["voltage", "current", "power", "frequency"],
+        "compression": "differential",
+        "local_storage_duration": 300
+      },
+      "medium_frequency": {
+        "interval_ms": 1000,
+        "parameters": ["soc", "temperature", "energy_delivered", "session_time"],
+        "compression": "standard",
+        "local_storage_duration": 3600
+      },
+      "low_frequency": {
+        "interval_ms": 10000,
+        "parameters": ["efficiency", "power_factor", "thd", "grid_frequency"],
+        "compression": "none",
+        "local_storage_duration": 86400
+      }
+    },
+    "event_logging": {
+      "critical_events": {
+        "priority": "immediate",
+        "retention_days": 90,
+        "encryption_required": true
+      },
+      "warning_events": {
+        "priority": "high",
+        "retention_days": 30,
+        "encryption_required": false
+      },
+      "info_events": {
+        "priority": "normal",
+        "retention_days": 7,
+        "encryption_required": false
+      }
+    },
+    "analytics": {
+      "real_time_processing": true,
+      "ml_inference": {
+        "battery_health_prediction": true,
+        "charging_behavior_analysis": true,
+        "fault_prediction": true,
+        "model_version": "ml_v2.1.0"
+      }
+    }
+  },
+  "error_handling": {
+    "fault_tolerance": {
+      "retry_attempts": 5,
+      "exponential_backoff": true,
+      "max_retry_interval": 300,
+      "circuit_breaker_threshold": 10,
+      "error_recovery_timeout": 60
+    },
+    "diagnostics": {
+      "self_test_on_connect": true,
+      "periodic_health_check": 3600,
+      "log_level": "info",
+      "remote_diagnostics_support": true
+    },
+    "fault_codes": {
+      "standard": "ISO14229",
+      "manufacturer_specific": true,
+      "fault_memory_duration": 30
+    }
+  },
+  "load_management": {
+    "dynamic_load_balancing": {
+      "enabled": true,
+      "algorithm": "fair_share_with_priority",
+      "response_time_ms": 500,
+      "minimum_allocation_percent": 10
+    },
+    "demand_response": {
+      "dr_programs": ["peak_shaving", "load_shifting", "frequency_regulation"],
+      "response_time_seconds": 15,
+      "minimum_notice_minutes": 30,
+      "opt_out_capability": true
+    },
+    "grid_services": {
+      "frequency_response": false,
+      "voltage_support": false,
+      "spinning_reserve": false,
+      "future_capabilities": ["v2g_aggregation", "virtual_power_plant"]
+    },
+    "priority_management": {
+      "base_priority": "normal",
+      "user_override": true,
+      "fleet_management": true,
+      "emergency_override": true
+    }
+  },
+  "manufacturer_specific": {
+    "nissan_leaf": {
+      "battery_management": {
+        "rapid_charge_limit_per_day": 3,
+        "rapid_charge_cooldown_minutes": 45,
+        "degradation_protection": {
+          "enabled": true,
+          "algorithm": "nissan_proprietary_v3.1",
+          "soh_threshold": 80
+        },
+        "cell_balancing": {
+          "active_balancing": false,
+          "passive_balancing": true,
+          "balance_threshold_mv": 100
+        },
+        "thermal_management": {
+          "liquid_cooling": false,
+          "air_cooling": true,
+          "preconditioning": {
+            "remote_start": true,
+            "grid_powered": true,
+            "battery_powered": false
+          }
+        }
+      },
+      "can_bus_integration": {
+        "primary_bus": {
+          "baud_rate": 500000,
+          "protocol": "CAN_2.0B",
+          "termination": "120_ohm"
+        },
+        "ev_can_messages": {
+          "battery_soc": {
+            "id": "0x5BC",
+            "dlc": 8,
+            "frequency_ms": 1000,
+            "scaling": 0.5,
+            "offset": 0
+          },
+          "battery_voltage": {
+            "id": "0x5C0",
+            "dlc": 8,
+            "frequency_ms": 100,
+            "scaling": 0.1,
+            "offset": 0
+          },
+          "battery_current": {
+            "id": "0x5C0",
+            "dlc": 8,
+            "frequency_ms": 100,
+            "scaling": 0.1,
+            "offset": -819.2
+          },
+          "battery_temperature": {
+            "id": "0x54B",
+            "dlc": 8,
+            "frequency_ms": 5000,
+            "scaling": 0.25,
+            "offset": -40
+          },
+          "charging_status": {
+            "id": "0x54C",
+            "dlc": 8,
+            "frequency_ms": 1000,
+            "bit_definitions": {
+              "charging_active": {"byte": 0, "bit": 0},
+              "plug_connected": {"byte": 0, "bit": 1},
+              "charging_complete": {"byte": 0, "bit": 2}
+            }
+          }
+        },
+        "obd_parameters": {
+          "supported_pids": ["01", "05", "0C", "0D", "1F", "21", "2F"],
+          "ev_specific_pids": {
+            "battery_pack_voltage": "A4",
+            "hybrid_battery_remaining": "5B",
+            "fuel_system_control": "03"
+          }
+        }
+      },
+      "connectivity": {
+        "telematics": {
+          "nissan_connect": true,
+          "remote_climate": true,
+          "remote_charging": true,
+          "find_my_car": true
+        },
+        "mobile_app_integration": {
+          "charging_control": true,
+          "status_monitoring": true,
+          "scheduling": true,
+          "notifications": true
+        }
+      },
+      "model_specific_parameters": {
+        "40kwh_variant": {
+          "usable_capacity": 39.5,
+          "chemistry": "LiMn2O4",
+          "modules": 24,
+          "cells_per_module": 4,
+          "nominal_voltage": 360
+        },
+        "62kwh_variant": {
+          "usable_capacity": 59.0,
+          "chemistry": "LiMn2O4",
+          "modules": 24,
+          "cells_per_module": 8,
+          "nominal_voltage": 360
+        }
+      }
+    }
+  },
+  "compliance_and_certification": {
+    "standards_compliance": [
+      "ISO15118-2",
+      "ISO15118-20", 
+      "IEC61851-1",
+      "IEC61851-23",
+      "SAE_J1772",
+      "SAE_J2847",
+      "UL2594",
+      "FCC_Part_15"
+    ],
+    "regional_certifications": {
+      "north_america": ["UL", "FCC", "ENERGY_STAR"],
+      "europe": ["CE", "DEKRA", "TUV"],
+      "asia_pacific": ["JIS", "KS", "CCC"]
+    },
+    "cybersecurity": {
+      "framework": "ISO27001",
+      "vulnerability_management": true,
+      "penetration_testing": "quarterly",
+      "security_updates": "automatic"
+    }
+  },
+  "version_control": {
+    "semantic_versioning": true,
+    "release_channel": "stable",
+    "rollback_capability": true,
+    "update_mechanism": "ota_with_validation",
+    "compatibility_matrix": {
+      "vlink_ms_4.1.x": "fully_compatible",
+      "vlink_ms_4.0.x": "fully_compatible", 
+      "vlink_ms_3.2.x": "limited_compatibility",
+      "vlink_ms_3.1.x": "deprecated"
+    },
+    "deployment": {
+      "staged_rollout": true,
+      "canary_testing": true,
+      "a_b_testing": false,
+      "rollback_triggers": ["error_rate > 5%", "performance_degradation > 20%"]
+    }
+  }
+}

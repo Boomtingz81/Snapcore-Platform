@@ -1,358 +1,533 @@
 <!-- FILE: /public/index.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ff4444" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="description" content="SnapFaultCore — Professional Automotive Diagnostic Platform by SnapCore AI Systems Ltd." />
   <title>SnapFaultCore</title>
 
   <!-- PWA -->
+  <!-- (Kept) Your original line; many servers don’t serve /public in prod, so we add a proper one below -->
   <link rel="manifest" href="/public/manifest.json" />
-  <meta name="theme-color" content="#ff4444" />
+  <!-- ✅ Added: standard location most hosts use -->
+  <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
+
+  <!-- iOS/Apple PWA improvements -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SnapFaultCore">
   <link rel="apple-touch-icon" href="/icons/snapfaultcore-192.png" />
+  <!-- Safari pinned tab (optional if you have it) -->
+  <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#ff4444">
 
   <style>
-    /* ---------- Base ---------- */
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      background: #0a1420;
-      color: #fff;
-      overflow: hidden;
-      position: relative;
+    :root{
+      --bg:#0a1420;
+      --accent:#00ffaa;
+      --accent-dim:#66ffcc;
+      --brand:#ff4444;
+      --text:#ffffff;
+      --muted:rgba(255,255,255,.75);
+      --panel:rgba(15,25,40,.4);
+      --panel-border:rgba(0,255,170,.25);
+      --panel-hover:rgba(0,255,170,.08);
+      --ring:rgba(0,255,102,.6);
+      --shadow:0 8px 32px rgba(0,0,0,.35);
+      --radius:12px;
+      --gap:40px;
     }
 
-    /* ---------- Background ---------- */
-    .particle-background {
-      position: fixed; inset: 0; z-index: -1000;
+    /* Daily particle color themes */
+    :root {
+      --particle-color: #00ffaa;
+      --particle-glow: rgba(0, 255, 170, 0.6);
+      --particle-secondary: #66ffcc;
+      --particle-secondary-glow: rgba(102, 255, 204, 0.45);
+    }
+
+    /* Monday - Green (default above) */
+    .theme-tuesday {
+      --particle-color: #00ffff;
+      --particle-glow: rgba(0, 255, 255, 0.6);
+      --particle-secondary: #66ffff;
+      --particle-secondary-glow: rgba(102, 255, 255, 0.45);
+    }
+
+    .theme-wednesday {
+      --particle-color: #ff8800;
+      --particle-glow: rgba(255, 136, 0, 0.6);
+      --particle-secondary: #ffaa44;
+      --particle-secondary-glow: rgba(255, 170, 68, 0.45);
+    }
+
+    .theme-thursday {
+      --particle-color: #ff4444;
+      --particle-glow: rgba(255, 68, 68, 0.6);
+      --particle-secondary: #ff6666;
+      --particle-secondary-glow: rgba(255, 102, 102, 0.45);
+    }
+
+    .theme-friday {
+      --particle-color: #aa44ff;
+      --particle-glow: rgba(170, 68, 255, 0.6);
+      --particle-secondary: #cc66ff;
+      --particle-secondary-glow: rgba(204, 102, 255, 0.45);
+    }
+
+    .theme-saturday {
+      --particle-color: #ffff00;
+      --particle-glow: rgba(255, 255, 0, 0.6);
+      --particle-secondary: #ffff66;
+      --particle-secondary-glow: rgba(255, 255, 102, 0.45);
+    }
+
+    .theme-sunday {
+      --particle-color: #4488ff;
+      --particle-glow: rgba(68, 136, 255, 0.6);
+      --particle-secondary: #66aaff;
+      --particle-secondary-glow: rgba(102, 170, 255, 0.45);
+    }
+
+    /* RESET (tiny) */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      overflow-x:hidden; /* FIX: allow page to scroll */
+      line-height:1.45;
+    }
+
+    /* Background layers */
+    .particle-background{
+      position:fixed; inset:0; z-index:-1000;
       background:
-        radial-gradient(ellipse at 30% 40%, rgba(0,100,150,.03) 0%, transparent 60%),
-        radial-gradient(ellipse at 70% 60%, rgba(0,80,120,.02) 0%, transparent 50%),
-        #0a1420;
+        radial-gradient(ellipse at 30% 40%, rgba(0,100,150,.05) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 60%, rgba(0,80,120,.04) 0%, transparent 50%),
+        var(--bg);
+      pointer-events:none;
     }
-    .floating-particles { position: fixed; inset: 0; z-index: -999; overflow: hidden; }
-
-    .particle {
-      position: absolute; width: 2px; height: 2px;
-      background: #00ffaa; border-radius: 50%; opacity: .8;
-      animation: particleFloat 20s linear infinite;
-      box-shadow: 0 0 4px rgba(0,255,170,.6);
+    .floating-particles{position:fixed; inset:0; z-index:-999; pointer-events:none; overflow:hidden}
+    .particle{
+      position:absolute; border-radius:50%;
+      background:var(--particle-color); width:2px; height:2px; opacity:.8;
+      box-shadow:0 0 4px var(--particle-glow);
+      animation:particleFloat 20s linear infinite;
       will-change: transform, opacity;
     }
-    .particle.medium { width: 3px; height: 3px; opacity: .6; animation-duration: 25s; }
-    .particle.large { width: 4px; height: 4px; background: #66ffcc; opacity: .45; animation-duration: 30s; box-shadow: 0 0 6px rgba(102,255,204,.4); }
-
-    @keyframes particleFloat {
-      0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
-      8% { opacity: .8; }
-      92% { opacity: .8; }
-      100% { transform: translateY(-22vh) translateX(30px) rotate(180deg); opacity: 0; }
+    .particle.medium{width:3px;height:3px;opacity:.6;animation-duration:25s}
+    .particle.large{width:4px;height:4px;background:var(--particle-secondary);opacity:.45;animation-duration:30s;box-shadow:0 0 6px var(--particle-secondary-glow)}
+    @keyframes particleFloat{
+      0%{transform:translateY(100vh) translateX(0) rotate(0);opacity:0}
+      5%{opacity:.8} 95%{opacity:.8}
+      100%{transform:translateY(-20vh) translateX(30px) rotate(180deg);opacity:0}
     }
 
-    /* Reduced motion respect */
-    @media (prefers-reduced-motion: reduce) {
-      .particle, .main-title, .welcome-title, .status-dot { animation: none !important; }
+    /* Page layout */
+    .skip-link{
+      position:fixed; left:16px; top:16px; z-index:50;
+      background:rgba(0,0,0,.6); color:#fff; padding:8px 12px; border-radius:8px;
+      border:1px solid rgba(255,255,255,.2); text-decoration:none; font-size:14px; opacity:.9;
     }
 
-    /* ---------- Skip link ---------- */
-    .skip-link {
-      position: absolute; top: 12px; left: 12px; z-index: 1000;
-      background: rgba(0,0,0,.7); color: #fff;
-      padding: .5rem .8rem; border: 1px solid rgba(255,255,255,.2);
-      border-radius: 8px; font-size: 14px; text-decoration: none;
-      opacity: .9;
+    .container{max-width:1200px; margin:auto; padding:48px 24px}
+    .hero{
+      min-height:90vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; gap:16px; padding-top:48px; padding-bottom:32px;
     }
-    .skip-link:focus { outline: 2px solid #00ffaa; outline-offset: 3px; }
+    .title{
+      font-size:clamp(2.5rem,6vw,5.5rem);
+      font-weight:400; letter-spacing:1px; color:var(--brand);
+      text-shadow:0 0 10px rgba(255,68,68,.8),0 0 20px rgba(255,68,68,.6),0 0 30px rgba(255,68,68,.4);
+      animation:glow 3s ease-in-out infinite alternate;
+    }
+    @keyframes glow{
+      from{ text-shadow:0 0 10px rgba(255,68,68,.8),0 0 20px rgba(255,68,68,.6),0 0 30px rgba(255,68,68,.4) }
+      to { text-shadow:0 0 15px rgba(255,68,68,1),0 0 25px rgba(255,68,68,.8),0 0 35px rgba(255,68,68,.6) }
+    }
+    .powered{color:var(--muted); margin-top:4px; margin-bottom:28px}
 
-    /* ---------- Layout ---------- */
-    .main-container {
-      min-height: 100vh; padding: 40px;
-      display: grid; place-items: center;
-      position: relative;
+    .nav-strip{
+      display:flex; gap:8px; background:var(--panel); border:1px solid var(--panel-border);
+      border-radius:var(--radius); padding:12px; backdrop-filter:blur(10px); box-shadow:var(--shadow);
+      align-self:stretch; justify-content:center; flex-wrap:wrap; margin:40px 0;
     }
-    .content-wrap {
-      width: min(1200px, 100%);
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 40px;
+    .nav-btn{
+      display:flex; gap:8px; align-items:center; justify-content:center; flex:1 1 140px;
+      padding:10px 16px; color:var(--muted); text-decoration:none;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:8px; transition:all .25s ease;
     }
+    .nav-btn:hover{color:var(--accent); background:var(--panel-hover); border-color:var(--panel-border); transform:translateY(-2px)}
+    .nav-btn.active{color:var(--accent); background:rgba(0,255,170,.12); border-color:rgba(0,255,170,.3)}
+    .status{
+      display:inline-flex; gap:10px; align-items:center; padding:12px 20px;
+      border-radius:999px; border:1px solid rgba(0,255,170,.3); background:rgba(0,255,170,.08);
+    }
+    .dot{width:10px;height:10px;background:#00ff66;border-radius:50%;box-shadow:0 0 8px var(--ring); animation:pulse 2s ease-in-out infinite}
+    @keyframes pulse{50%{transform:scale(1.2);opacity:.8}}
 
-    /* ---------- Titles ---------- */
-    .main-title {
-      font-size: clamp(2.6rem, 6vw, 5.2rem);
-      font-weight: 400; letter-spacing: 1px; text-align: center;
-      color: #ff4444;
-      text-shadow:
-        0 0 10px rgba(255,68,68,.8),
-        0 0 20px rgba(255,68,68,.6),
-        0 0 30px rgba(255,68,68,.4);
-      margin: 0 0 10px;
-      animation: mainTitleGlow 3s ease-in-out infinite alternate;
+    /* Panels grid (for "tools" look) */
+    .grid{display:grid; grid-template-columns:280px 1fr; gap:var(--gap)}
+    .sidebar{display:flex; flex-direction:column; gap:var(--gap)}
+    .panel{
+      background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius);
+      padding:20px; backdrop-filter:blur(10px); box-shadow:var(--shadow);
     }
-    @keyframes mainTitleGlow {
-      0% {
-        text-shadow:
-          0 0 10px rgba(255,68,68,.8),
-          0 0 20px rgba(255,68,68,.6),
-          0 0 30px rgba(255,68,68,.4);
-      }
-      100% {
-        text-shadow:
-          0 0 15px rgba(255,68,68,1),
-          0 0 25px rgba(255,68,68,.8),
-          0 0 35px rgba(255,68,68,.6);
-      }
+    .panel h3{color:var(--accent); font-weight:600; font-size:16px; margin-bottom:12px}
+    .menu{display:flex; flex-direction:column; gap:8px}
+    .menu a{
+      display:flex; gap:10px; align-items:center; padding:12px; border-radius:8px;
+      color:var(--muted); text-decoration:none; border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.03); transition:all .2s;
     }
-    .powered-by {
-      font-size: 1rem; text-align: center; opacity: .9; font-weight: 300; margin: 0 0 30px;
-    }
+    .menu a:hover{color:var(--accent); background:var(--panel-hover); border-color:var(--panel-border); transform:translateX(4px)}
 
-    /* ---------- Sidebar ---------- */
-    .left-sidebar {
-      display: grid; gap: 30px; align-content: start;
+    /* Section blocks (targets for nav) */
+    section.app-section{scroll-margin-top:84px; padding:72px 0}
+    section.app-section .section-title{
+      font-size:clamp(2rem,4vw,3rem); font-weight:300; color:var(--brand);
+      text-shadow:0 0 15px rgba(255,68,68,.7), 0 0 25px rgba(255,68,68,.4);
+      margin-bottom:12px;
     }
-    .sidebar-section {
-      background: rgba(15,25,40,.4); border: 1px solid rgba(0,255,170,.2);
-      border-radius: 12px; padding: 18px; backdrop-filter: blur(10px);
-    }
-    .section-title {
-      color: #00ffaa; font-size: 16px; font-weight: 600; margin-bottom: 14px;
-    }
-    .menu-item {
-      display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 12px;
-      padding: 12px; margin-bottom: 8px;
-      background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.05);
-      border-radius: 8px; color: rgba(255,255,255,.85); text-decoration: none; font-size: 15px;
-      transition: transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
-    }
-    .menu-item:hover {
-      background: rgba(0,255,170,.08); border-color: rgba(0,255,170,.28); color: #00ffaa;
-      transform: translateX(4px);
-    }
-    .menu-icon { font-size: 18px; text-align: center; }
+    section.app-section p.sub{color:var(--muted); margin-bottom:20px}
 
-    /* ---------- Right content ---------- */
-    .right-content { display: grid; gap: 40px; align-content: start; }
-    .top-navigation {
-      display: grid; grid-auto-flow: column; gap: 8px; align-items: center;
-      background: rgba(15,25,40,.4); border: 1px solid rgba(0,255,170,.2);
-      border-radius: 12px; padding: 10px; backdrop-filter: blur(10px);
-    }
-    .nav-button {
-      display: inline-grid; grid-auto-flow: column; gap: 8px; place-content: center;
-      padding: 10px 16px; min-width: 90px;
-      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
-      border-radius: 8px; color: rgba(255,255,255,.85); text-decoration: none;
-      transition: transform .15s ease, background .2s ease, border-color .2s ease, color .2s ease;
-    }
-    .nav-button:hover { background: rgba(0,255,170,.1); border-color: rgba(0,255,170,.26); color: #00ffaa; }
-    .nav-button.active { background: rgba(0,255,170,.12); border-color: rgba(0,255,170,.3); color: #00ffaa; }
+    /* Footer spacer for comfy end-of-page spacing */
+    .footer-space{height:96px}
 
-    .welcome-title {
-      font-size: clamp(2rem, 4.5vw, 3.6rem); font-weight: 300; margin: 0 0 10px; text-align: center;
-      color: #ff4444;
-      text-shadow: 0 0 15px rgba(255,68,68,.8), 0 0 25px rgba(255,68,68,.5);
-      animation: welcomeGlow 4s ease-in-out infinite alternate;
+    /* Reduced motion */
+    @media (prefers-reduced-motion:reduce){
+      *{animation:none!important; transition:none!important}
     }
-    @keyframes welcomeGlow {
-      0% { text-shadow: 0 0 15px rgba(255,68,68,.8), 0 0 25px rgba(255,68,68,.5); }
-      100% { text-shadow: 0 0 20px rgba(255,68,68,1), 0 0 30px rgba(255,68,68,.7); }
-    }
-    .welcome-subtitle { text-align: center; font-size: 1.25rem; font-weight: 300; margin: 0 0 24px; }
-
-    .status-indicator {
-      display: inline-grid; grid-auto-flow: column; gap: 10px; align-items: center;
-      padding: 12px 20px; border-radius: 25px;
-      background: rgba(0,255,170,.08); border: 1px solid rgba(0,255,170,.3);
-      margin-inline: auto;
-    }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%; background: #00ff66;
-      box-shadow: 0 0 8px rgba(0,255,102,.6);
-      animation: statusPulse 2s ease-in-out infinite;
-    }
-    @keyframes statusPulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.25); opacity: .78; }
-    }
-
-    /* ---------- Responsive ---------- */
-    @media (max-width: 1024px) {
-      .content-wrap { grid-template-columns: 1fr; }
-      .left-sidebar { order: 2; }
-      .right-content { order: 1; }
-    }
-    @media (max-width: 680px) {
-      .top-navigation { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0,1fr)); }
-      .nav-button { width: 100%; }
+    @media (max-width:1024px){
+      .grid{grid-template-columns:1fr}
     }
   </style>
+
+  <!-- ✅ Favicon + PWA -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="manifest" href="/manifest.json" />
+
 </head>
 <body>
-  <!-- Background -->
+  <!-- BG Layers -->
   <div class="particle-background" aria-hidden="true"></div>
   <div class="floating-particles" id="particleContainer" aria-hidden="true"></div>
 
-  <!-- Accessibility -->
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a class="skip-link" href="#main">Skip to main content</a>
 
-  <!-- Main -->
-  <main class="main-container" id="main-content">
-    <header style="text-align:center; margin-bottom: 10px;">
-      <h1 class="main-title">SnapFaultCore</h1>
-      <p class="powered-by" aria-label="Powered by">Powered by SnapCore AI Systems Ltd</p>
-    </header>
+  <!-- HERO -->
+  <header class="container hero" id="home" role="banner">
+    <h1 class="title">SnapFaultCore</h1>
+    <div class="powered">Powered by SnapCore AI Systems Ltd</div>
 
-    <section class="content-wrap" aria-label="Home layout">
-      <!-- Sidebar -->
-      <aside class="left-sidebar" aria-label="SnapCore menus">
-        <div class="sidebar-section">
-          <h2 class="section-title">SnapCore Tools</h2>
-          <a href="#" class="menu-item"><span class="menu-icon">⚡</span><span>SnapTech</span></a>
-          <a href="#" class="menu-item"><span class="menu-icon">👤</span><span>SnapPro</span></a>
-          <a href="#" class="menu-item"><span class="menu-icon">📺</span><span>History</span></a>
+    <nav class="nav-strip" aria-label="Primary">
+      <a class="nav-btn active" href="#home"><span aria-hidden="true">🏠</span><span>Home</span></a>
+      <a class="nav-btn" href="#scan"><span aria-hidden="true">🔍</span><span>Scan</span></a>
+      <a class="nav-btn" href="#live"><span aria-hidden="true">▶️</span><span>Live</span></a>
+      <a class="nav-btn" href="#analytics"><span aria-hidden="true">📈</span><span>Analytics</span></a>
+      <a class="nav-btn" href="#terminal"><span aria-hidden="true">💻</span><span>Terminal</span></a>
+    </nav>
+
+    <div class="status" role="status" aria-live="polite" title="System status">
+      <div class="dot" aria-hidden="true"></div>
+      <span>All Systems Online</span>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main id="main" role="main">
+    <div class="container grid">
+      <!-- Left: tools -->
+      <aside class="sidebar" aria-label="Tools">
+        <div class="panel" aria-labelledby="tools-heading">
+          <h3 id="tools-heading">SnapCore Tools</h3>
+          <div class="menu" role="navigation" aria-label="Tools menu">
+            <a href="#"><span aria-hidden="true">⚡</span><span>SnapTech</span></a>
+            <a href="#"><span aria-hidden="true">👤</span><span>SnapPro</span></a>
+            <a href="#"><span aria-hidden="true">📺</span><span>History</span></a>
+          </div>
         </div>
 
-        <div class="sidebar-section">
-          <h2 class="section-title">Diagnostic Tools</h2>
-          <a href="#" class="menu-item"><span class="menu-icon">🔍</span><span>VIN Decoder</span></a>
-          <a href="#" class="menu-item"><span class="menu-icon">➰</span><span>Plate Scanner</span></a>
-          <a href="#" class="menu-item"><span class="menu-icon">⚠️</span><span>SnapDNA</span></a>
-          <a href="#" class="menu-item"><span class="menu-icon">👤</span><span>Lab Tools</span></a>
+        <div class="panel" aria-labelledby="diag-heading">
+          <h3 id="diag-heading">Diagnostic Tools</h3>
+          <div class="menu" role="navigation" aria-label="Diagnostic menu">
+            <a href="#"><span aria-hidden="true">🔍</span><span>VIN Decoder</span></a>
+            <a href="#"><span aria-hidden="true">➰</span><span>Plate Scanner</span></a>
+            <a href="#"><span aria-hidden="true">⚠️</span><span>SnapDNA</span></a>
+            <a href="#"><span aria-hidden="true">🧪</span><span>Lab Tools</span></a>
+            <a href="#"><span aria-hidden="true">🚗</span><span>Vehicle Lookup</span></a>
+          </div>
         </div>
       </aside>
 
-      <!-- Right -->
-      <div class="right-content">
-        <nav class="top-navigation" aria-label="Primary">
-          <a href="#" class="nav-button active" aria-current="page"><span>🏠</span><span>Home</span></a>
-          <a href="#" class="nav-button"><span>🔍</span><span>Scan</span></a>
-          <a href="#" class="nav-button"><span>▶️</span><span>Live</span></a>
-          <a href="#" class="nav-button"><span>📈</span><span>Analytics</span></a>
-          <a href="#" class="nav-button"><span>💻</span><span>Terminal</span></a>
-        </nav>
+      <!-- Right: welcome + sections -->
+      <section class="panel" aria-labelledby="welcome-title">
+        <h2 class="section-title" id="welcome-title">Welcome to SnapFaultCore</h2>
+        <p class="sub">Professional Automotive Diagnostic Platform</p>
 
-        <section aria-labelledby="welcome-title">
-          <h2 class="welcome-title" id="welcome-title">Welcome to SnapFaultCore</h2>
-          <p class="welcome-subtitle">Professional Automotive Diagnostic Platform</p>
-          <div class="status-indicator" role="status" aria-live="polite">
-            <span class="status-dot" aria-hidden="true"></span>
-            <span class="status-text">All Systems Online</span>
+        <!-- Anchor sections -->
+        <section id="scan" class="app-section" aria-labelledby="scan-title">
+          <h3 class="section-title" id="scan-title">Scan</h3>
+          <p class="sub">Run a quick vehicle scan and list DTCs. (Hook your scanner here later.)</p>
+          <div class="menu">
+            <a href="#"><span aria-hidden="true">▶</span><span>Start Quick Scan</span></a>
+            <a href="#"><span aria-hidden="true">🧾</span><span>View Last Report</span></a>
           </div>
         </section>
-      </div>
-    </section>
+
+        <section id="live" class="app-section" aria-labelledby="live-title">
+          <h3 class="section-title" id="live-title">Live Data</h3>
+          <p class="sub">Stream RPM, speed, temps, and more. (Placeholder for your live module.)</p>
+          <div class="menu">
+            <a href="#"><span aria-hidden="true">⏺</span><span>Start Stream</span></a>
+            <a href="#"><span aria-hidden="true">💾</span><span>Export Sample</span></a>
+          </div>
+        </section>
+
+        <section id="analytics" class="app-section" aria-labelledby="analytics-title">
+          <h3 class="section-title" id="analytics-title">Analytics</h3>
+          <p class="sub">Trends, comparisons, and insights. (Wire to your charts later.)</p>
+          <div class="menu">
+            <a href="#"><span aria-hidden="true">📊</span><span>Open Dashboard</span></a>
+            <a href="#"><span aria-hidden="true">⚙️</span><span>Configure Charts</span></a>
+          </div>
+        </section>
+
+        <section id="terminal" class="app-section" aria-labelledby="terminal-title">
+          <h3 class="section-title" id="terminal-title">Terminal</h3>
+          <p class="sub">Developer console &amp; custom commands. (Future module.)</p>
+          <div class="menu">
+            <a href="#"><span aria-hidden="true">💻</span><span>Open Console</span></a>
+            <a href="#"><span aria-hidden="true">📜</span><span>Command Reference</span></a>
+          </div>
+        </section>
+      </section>
+    </div>
+
+    <div class="footer-space"></div>
   </main>
 
-  <script>
-    /* ---------- Service Worker (deduped, robust) ---------- */
-    (function registerSW() {
-      const SW_URL = '/public/service-worker.js';
-      if (!('serviceWorker' in navigator)) return;
+  <noscript>
+    <div style="position:fixed;bottom:0;left:0;right:0;padding:8px 12px;background:#3b0c0c;color:#fff;text-align:center;font-size:14px;z-index:9999;">
+      JavaScript is disabled. SnapFaultCore requires JavaScript to run.
+    </div>
+  </noscript>
 
-      window.addEventListener('load', async () => {
-        try {
-          const reg = await navigator.serviceWorker.register(SW_URL);
-          // Auto-activate fresh worker
-          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+  <script>
+    // Defer heavy bootstrap until idle to keep first paint snappy
+    (window.requestIdleCallback || function(cb){ setTimeout(cb, 1); })(function () {
+
+      /* ---------- PWA bootstrap (single registration + fallback) ---------- */
+      (function bootstrapPWA(){
+        // (Kept) Your original path
+        const PRIMARY_SW_URL = '/public/service-worker.js'; // adjust if you place it at root
+        // ✅ Added: fallback path commonly used in production
+        const FALLBACK_SW_URL = '/service-worker.js';
+
+        async function registerSW(url){
+          const reg = await navigator.serviceWorker.register(url);
+          console.log('[SW] Registered:', reg.scope);
+
           reg.addEventListener('updatefound', () => {
             const sw = reg.installing;
             if (!sw) return;
             sw.addEventListener('statechange', () => {
               if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-                reg.waiting?.postMessage({ type: 'SKIP_WAITING' });
+                reg.waiting?.postMessage({type:'SKIP_WAITING'});
               }
             });
           });
+
           navigator.serviceWorker.addEventListener('controllerchange', () => {
-            // Optional: uncomment to auto-reload on new shell
-            // location.reload();
+            console.log('[SW] Controller changed');
+            // window.location.reload(); // enable if you want auto-reload on update
           });
-        } catch (err) {
-          console.log('[SW] registration failed', err);
+
+          return reg;
         }
-      });
 
-      // A2HS hook
-      let deferredPrompt;
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        // show your custom "Install" UI and call:
-        // await deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null;
-      });
-    })();
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', async () => {
+            try {
+              try {
+                await registerSW(PRIMARY_SW_URL);
+              } catch (err) {
+                console.warn('[SW] Primary registration failed, trying fallback', err);
+                await registerSW(FALLBACK_SW_URL);
+              }
+            } catch (err2) {
+              console.log('[SW] registration fully failed', err2);
+            }
+          });
 
-    /* ---------- Particle System (paused when hidden) ---------- */
-    class ParticleSystem {
-      constructor() {
-        this.container = document.getElementById('particleContainer');
-        this.particles = [];
-        this.maxParticles = 60;
-        this.addTimer = null;
-        this.cleanTimer = null;
-        this.running = true;
-        this.init();
-      }
-      init() {
-        for (let i = 0; i < 35; i++) setTimeout(() => this.addParticle(), i * 120);
-        this.schedule();
-        document.addEventListener('visibilitychange', () => {
-          this.running = document.visibilityState === 'visible';
-          this.running ? this.schedule() : this.unschedule();
-        }, { passive: true });
-      }
-      schedule() {
-        this.unschedule();
-        this.addTimer = setInterval(() => this.running && this.addParticle(), 320);
-        this.cleanTimer = setInterval(() => this.running && this.cleanup(), 1500);
-      }
-      unschedule() {
-        if (this.addTimer) clearInterval(this.addTimer);
-        if (this.cleanTimer) clearInterval(this.cleanTimer);
-      }
-      addParticle() {
-        if (this.particles.length >= this.maxParticles) return;
-        const el = document.createElement('div');
-        const r = Math.random();
-        el.className = r < 0.4 ? 'particle' : r < 0.7 ? 'particle medium' : 'particle large';
-        el.style.left = Math.random() * 100 + '%';
-        el.style.animationDelay = (Math.random() * 5).toFixed(2) + 's';
-        el.style.animationDuration = (18 + Math.random() * 12).toFixed(2) + 's';
+          // Add-to-Home-Screen hook
+          let deferredPrompt;
+          window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // show your custom "Install" UI then:
+            // await deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null;
+          });
+        }
+      })();
 
-this.container.appendChild(el);
-        this.particles.push(el);
+      /* ---------- Daily Themed Particle System ---------- */
+      class DailyThemedParticleSystem{
+        constructor(){
+          this.container = document.getElementById('particleContainer');
+          if (!this.container) {
+            console.warn('[Particles] Container not found, skipping init.');
+            return;
+          }
+          this.particles = [];
+          this.maxParticles = 60;
+          this.addTimer = null;
+          this.cleanupTimer = null;
+          this._tickAdd = this._tickAdd.bind(this);
+          this._tickCleanup = this._tickCleanup.bind(this);
+          this._visibility = this._visibility.bind(this);
+          this._onMotionPref = this._onMotionPref.bind(this);
+          this.prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+          this.setDailyTheme();
+          this.init();
+        }
+
+        setDailyTheme() {
+          const today = new Date();
+          const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+document.body.classList.remove('theme-tuesday','theme-wednesday','theme-thursday','theme-friday','theme-saturday','theme-sunday');
+
+          switch(dayOfWeek) {
+            case 1: console.log('[Daily Theme] Monday - Green particles'); break;
+            case 2: document.body.classList.add('theme-tuesday'); console.log('[Daily Theme] Tuesday - Cyan particles'); break;
+            case 3: document.body.classList.add('theme-wednesday'); console.log('[Daily Theme] Wednesday - Orange particles'); break;
+            case 4: document.body.classList.add('theme-thursday'); console.log('[Daily Theme] Thursday - Red particles'); break;
+            case 5: document.body.classList.add('theme-friday'); console.log('[Daily Theme] Friday - Purple particles'); break;
+            case 6: document.body.classList.add('theme-saturday'); console.log('[Daily Theme] Saturday - Yellow particles'); break;
+            case 0: document.body.classList.add('theme-sunday'); console.log('[Daily Theme] Sunday - Blue particles'); break;
+          }
+        }
+
+        init(){
+          if (this.prefersReduced) {
+            // Respect user’s reduced-motion preference
+            return;
+          }
+          for(let i=0;i<35;i++){ setTimeout(()=>this.addParticle(), i*120); }
+          this.addTimer = setInterval(this._tickAdd, 300);
+          this.cleanupTimer = setInterval(this._tickCleanup, 1500);
+          document.addEventListener('visibilitychange', this._visibility);
+
+          if (window.matchMedia) {
+            const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+            mq.addEventListener?.('change', this._onMotionPref);
+          }
+        }
+
+        _onMotionPref(e){
+          this.prefersReduced = e.matches;
+          if (this.prefersReduced) {
+            // stop animations
+            clearInterval(this.addTimer);
+            clearInterval(this.cleanupTimer);
+            this.addTimer = null;
+            this.cleanupTimer = null;
+            this.particles.forEach(p => p.remove());
+            this.particles = [];
+          } else {
+            // restart
+            this.init();
+          }
+        }
+
+        _visibility(){
+          const paused = document.hidden;
+          if (paused){
+            clearInterval(this.addTimer); clearInterval(this.cleanupTimer);
+          } else {
+            if (!this.prefersReduced) {
+              this.addTimer = setInterval(this._tickAdd, 300);
+              this.cleanupTimer = setInterval(this._tickCleanup, 1500);
+            }
+          }
+        }
+        _tickAdd(){ if (this.container && this.particles.length < this.maxParticles) this.addParticle(); }
+        _tickCleanup(){ this.cleanupParticles(); }
+
+        addParticle(){
+          const el = document.createElement('div');
+          const r = Math.random();
+          el.className = r<0.4 ? 'particle' : r<0.7 ? 'particle medium' : 'particle large';
+          el.style.left = Math.random()*100 + '%';
+          el.style.animationDelay = (Math.random()*5) + 's';
+          el.style.animationDuration = (18 + Math.random()*12) + 's';
+          this.container.appendChild(el);
+          this.particles.push(el);
+        }
+        cleanupParticles(){
+          this.particles = this.particles.filter(p=>{
+            if (!p.isConnected) return false;
+            const rect = p.getBoundingClientRect();
+            if (rect.bottom < -40){ p.remove(); return false; }
+            return true;
+          });
+        }
       }
-      cleanup() {
-        this.particles = this.particles.filter(p => {
-          if (!this.container.contains(p)) return false;
-          const rect = p.getBoundingClientRect();
-          if (rect.bottom < -60) { p.remove(); return false; }
-          return true;
+      new DailyThemedParticleSystem();
+
+      /* ---------- Nav: set active + smooth scroll ---------- */
+      (function wireNav(){
+        const links = Array.from(document.querySelectorAll('.nav-btn'));
+        const sections = ['home','scan','live','analytics','terminal']
+          .map(id => document.getElementById(id))
+          .filter(Boolean);
+
+        if (links.length === 0 || sections.length === 0) return;
+
+        // smooth scroll on click
+        links.forEach(a=>{
+          a.addEventListener('click', (e)=>{
+            const href = a.getAttribute('href') || '';
+            if (href.startsWith('#')){
+              e.preventDefault();
+              const target = document.querySelector(href);
+              target?.scrollIntoView({behavior:'smooth', block:'start'});
+              links.forEach(l=>l.classList.remove('active'));
+              a.classList.add('active');
+            }
+          });
         });
-      }
-    }
-    new ParticleSystem();
 
-    /* ---------- Small interactions ---------- */
-    document.querySelectorAll('.nav-button').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      }, { passive: false });
-    });
-    document.querySelectorAll('.menu-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.preventDefault();
-        item.style.transform = 'translateX(8px) scale(.98)';
-        setTimeout(() => item.style.transform = '', 140);
-      }, { passive: false });
+        // highlight active while scrolling
+        const observer = new IntersectionObserver((entries)=>{
+          const visible = entries
+            .filter(en=>en.isIntersecting)
+            .sort((a,b)=> b.intersectionRatio - a.intersectionRatio)[0];
+          if (!visible) return;
+          const id = visible.target.id;
+          links.forEach(l=>{
+            l.classList.toggle('active', l.getAttribute('href') === '#'+id);
+          });
+        }, { root:null, rootMargin:'-40% 0px -50% 0px', threshold:[0, .25, .5, .75, 1] });
+        sections.forEach(s=>observer.observe(s));
+      })();
+
     });
   </script>
+
+  <!-- React mount point -->
+<div id="root"></div>
+
+<!-- Boot the React app -->
+<script type="module" src="/src/main.jsx"></script>
+
 </body>
 </html>

@@ -1,0 +1,765 @@
+{
+  "policy_id": "hyundai_kia_precfd_v4.1.0",
+  "vlink_version": "4.4.0",
+  "api_compatibility": {
+    "min_vlink_ms_version": "4.0.0",
+    "max_vlink_ms_version": "4.9.x",
+    "backwards_compatible": ["3.2", "3.1", "3.0"],
+    "schema_version": "2024.4",
+    "hyundai_kia_integration": "native_precfd_optimized",
+    "api_endpoints": {
+      "precfd_control": "/api/v4/precfd",
+      "thermal_management": "/api/v4/thermal",
+      "bluelink_uvo": "/api/v4/bluelink-uvo",
+      "battery_conditioning": "/api/v4/conditioning",
+      "charging_optimization": "/api/v4/charging-opt"
+    }
+  },
+  "metadata": {
+    "name": "Hyundai/Kia Enhanced Pre-CFD vlink MS Charging Policy",
+    "description": "Advanced vlink MS compatible charging policy for Hyundai/Kia Pre-Charge Flow Diagram architecture EVs with comprehensive thermal management, BlueLink/UVO integration, and battery longevity optimization",
+    "manufacturer": "hyundai_motor_group_kia_corporation",
+    "policy_type": "production_precfd_comprehensive",
+    "certification_level": "tier_1_plus_precfd",
+    "created": "2024-08-22T10:00:00Z",
+    "updated": "2024-08-22T22:30:00Z",
+    "revision": "4.1.0-stable-precfd",
+    "build_number": "2024.08.22.2230",
+    "checksum": "sha256:b2c3d4e5f6a7890123456789012345678901abcdef2345678901abcdef456789",
+    "maintainer": {
+      "organization": "hyundai_kia_global_vlink_systems",
+      "contact": "precfd-support@vlink.ms",
+      "documentation": "https://docs.vlink.ms/policies/hyundai-kia-precfd",
+      "support_tier": "premium_precfd"
+    },
+    "revision_notes": {
+      "v4.1.0": "Major update: Enhanced Pre-CFD architecture support, improved thermal management, added IONIQ 6/EV6 support, advanced battery conditioning",
+      "v4.0.2": "Added Genesis GV60/GV70 support, improved winter performance, enhanced BlueLink integration",
+      "v4.0.1": "IONIQ 5/EV6 initial support, E-GMP platform recognition, 800V architecture optimization"
+    },
+    "precfd_philosophy": {
+      "charge_flow_optimization": "pre_calculation_priority",
+      "thermal_first_approach": "battery_protection_paramount",
+      "user_experience_focus": "convenience_without_compromise",
+      "performance_efficiency": "balanced_optimization"
+    },
+    "localization": {
+      "supported_languages": ["en", "ko", "ja", "de", "fr", "es", "pt", "it", "zh", "hi", "ar", "ru", "tr"],
+      "default_language": "en",
+      "regional_compliance": ["KR", "US", "CA", "EU", "UK", "AU", "IN", "CN", "JP", "ASEAN", "ME", "RU"]
+    }
+  },
+  "vehicle_identification": {
+    "vin_patterns": ["KMH*", "KNA*", "KNM*", "KND*", "KNE*", "KNF*", "KNG*", "KNH*", "KNJ*", "KNK*", "KNL*"],
+    "supported_models": [
+      // Hyundai Pre-CFD Models
+      {"model": "IONIQ_ELECTRIC", "year_range": [2017, 2022], "trim": ["Electric", "Electric_Plus", "Electric_Limited"], "generation": "1", "market": "GLOBAL", "architecture": "Pre-CFD"},
+      {"model": "KONA_ELECTRIC", "year_range": [2018, 2023], "trim": ["SE", "SEL", "Limited"], "generation": "1", "market": "GLOBAL", "architecture": "Pre-CFD"},
+      {"model": "IONIQ_5", "year_range": [2022, 2025], "trim": ["SE", "SEL", "Limited"], "generation": "1", "market": "GLOBAL", "architecture": "E-GMP_800V"},
+      {"model": "IONIQ_6", "year_range": [2023, 2025], "trim": ["SE", "SEL", "Limited"], "generation": "1", "market": "GLOBAL", "architecture": "E-GMP_800V"},
+      
+      // Kia Pre-CFD Models
+      {"model": "NIRO_EV", "year_range": [2019, 2025], "trim": ["S", "EX", "EX_Premium", "SX_Touring"], "generation": "1-2", "market": "GLOBAL", "architecture": "Pre-CFD"},
+      {"model": "SOUL_EV", "year_range": [2020, 2023], "trim": ["S", "GT-Line"], "generation": "3", "market": "GLOBAL", "architecture": "Pre-CFD"},
+      {"model": "EV6", "year_range": [2022, 2025], "trim": ["Light", "Wind", "GT-Line", "GT"], "generation": "1", "market": "GLOBAL", "architecture": "E-GMP_800V"},
+      {"model": "EV9", "year_range": [2024, 2025], "trim": ["Light", "Wind", "Land", "GT-Line"], "generation": "1", "market": "GLOBAL", "architecture": "E-GMP_800V"},
+      
+      // Genesis Pre-CFD Models
+      {"model": "GV60", "year_range": [2022, 2025], "trim": ["Standard", "Advanced", "Performance"], "generation": "1", "market": "GLOBAL", "architecture": "E-GMP_800V"},
+      {"model": "GV70_ELECTRIFIED", "year_range": [2023, 2025], "trim": ["Standard", "Advanced", "Prestige"], "generation": "1", "market": "GLOBAL", "architecture": "E-GMP_800V"},
+      {"model": "G90_ELECTRIFIED", "year_range": [2024, 2025], "trim": ["Standard", "Prestige"], "generation": "1", "market": "SELECT", "architecture": "E-GMP_800V"}
+    ],
+    "battery_variants": [
+      // Pre-CFD 400V Batteries
+      {"capacity": "28kWh", "chemistry": "NCM622", "pack_voltage": 356, "cells": 96, "architecture": "Pre-CFD_400V"},
+      {"capacity": "39.2kWh", "chemistry": "NCM622", "pack_voltage": 356, "cells": 96, "architecture": "Pre-CFD_400V"},
+      {"capacity": "64kWh", "chemistry": "NCM811", "pack_voltage": 356, "cells": 96, "architecture": "Pre-CFD_400V"},
+      
+      // E-GMP 800V Batteries
+      {"capacity": "58kWh", "chemistry": "NCM811", "pack_voltage": 697, "cells": 192, "architecture": "E-GMP_800V"},
+      {"capacity": "77.4kWh", "chemistry": "NCM811", "pack_voltage": 697, "cells": 192, "architecture": "E-GMP_800V"},
+      {"capacity": "99.8kWh", "chemistry": "NCM811", "pack_voltage": 697, "cells": 192, "architecture": "E-GMP_800V"}
+    ],
+    "architecture_detection": {
+      "precfd_400v": {
+        "voltage_range": [300, 450],
+        "max_dc_power": 77000,
+        "charging_architecture": "traditional_ccs",
+        "thermal_management": "liquid_cooling"
+      },
+      "egmp_800v": {
+        "voltage_range": [550, 850],
+        "max_dc_power": 350000,
+        "charging_architecture": "ultra_fast_capable",
+        "thermal_management": "advanced_heat_pump"
+      }
+    },
+    "identification_priority": [
+      "bluelink_uvo_api",
+      "genesis_connected_api",
+      "vin_decode_enhanced",
+      "architecture_detection",
+      "battery_pack_signature",
+      "can_message_analysis",
+      "obd_extended_query",
+      "user_input_assisted"
+    ]
+  },
+  "vlink_ms_parameters": {
+    "session_management": {
+      "max_session_duration": 720,
+      "idle_timeout": 240,
+      "authentication_required": true,
+      "session_heartbeat_interval": 30,
+      "graceful_termination_timeout": 90,
+      "concurrent_sessions_max": 1,
+      "session_recovery_support": true,
+      "bluelink_integration": {
+        "version": "4.2",
+        "real_time_sync": true,
+        "offline_capability": true,
+        "remote_control_support": true,
+        "charging_scheduling": true,
+        "route_planning": true
+      },
+      "uvo_integration": {
+        "version": "4.1",
+        "kia_connect": true,
+        "remote_climate": true,
+        "find_my_car": true,
+        "charging_status": true
+      },
+      "genesis_connected": {
+        "version": "3.0",
+        "concierge_service": true,
+        "premium_features": true,
+        "advanced_routing": true
+      }
+    },
+    "communication_stack": {
+      "primary_protocol": "ISO15118-20",
+      "fallback_protocols": ["ISO15118-2", "DIN70121", "CHAdeMO_Legacy"],
+      "protocol_negotiation_timeout": 20,
+      "plug_lock_support": true,
+      "pnc_support": true,
+      "pnc_future_ready": true,
+      "tls_version": "1.3",
+      "hyundai_kia_proprietary": {
+        "enabled": true,
+        "version": "hkmc_secure_v4.1",
+        "precfd_optimization": true,
+        "thermal_coordination": true,
+        "battery_protection_protocol": true
+      },
+      "connector_support": {
+        "ccs_combo_1": true,
+        "ccs_combo_2": true,
+        "chademo": true,
+        "tesla_adapter": "future_planned"
+      }
+    },
+    "cloud_integration": {
+      "vlink_ms_endpoint": "https://api-global.vlink.ms/v4",
+      "bluelink_bridge": "https://api.bluelink.hyundai.com/v4",
+      "uvo_bridge": "https://api.owners.kia.com/v4",
+      "genesis_bridge": "https://genesis.com/api/connected/v3",
+      "regional_endpoints": {
+        "korea": "https://api-kr.vlink.ms/v4",
+        "north_america": "https://api-us.vlink.ms/v4",
+        "europe": "https://api-eu.vlink.ms/v4",
+        "china": "https://api-cn.vlink.ms/v4",
+        "india": "https://api-in.vlink.ms/v4"
+      },
+      "telemetry_endpoint": "wss://telemetry-global.vlink.ms/v4",
+      "data_compression": "brotli",
+      "encryption": "AES-256-GCM",
+      "batch_upload_size": 120,
+      "offline_buffer_duration": 5400,
+      "privacy_compliance": {
+        "gdpr_compliant": true,
+        "ccpa_compliant": true,
+        "k_privacy_act": true,
+        "data_minimization": true
+      }
+    }
+  },
+  "charging_profile": {
+    "ac_charging": {
+      "max_current": 32,
+      "max_voltage": 240,
+      "max_power": 11000,
+      "phases": [1, 3],
+      "frequency": [50, 60],
+      "power_factor": 0.98,
+      "efficiency": 0.94,
+      "connector_types": ["Type_1_SAE_J1772", "Type_2_IEC_62196"],
+      "onboard_charger_variants": {
+        "precfd_standard": {"max_power": 7200, "efficiency": 0.92, "vehicles": ["IONIQ", "Kona", "Niro", "Soul"]},
+        "precfd_enhanced": {"max_power": 11000, "efficiency": 0.94, "vehicles": ["IONIQ_5", "EV6", "GV60"]},
+        "egmp_premium": {"max_power": 11000, "efficiency": 0.95, "vehicles": ["IONIQ_6", "EV9", "GV70"]}
+      },
+      "charging_optimization": {
+        "preconditioning_enabled": true,
+        "schedule_based_charging": true,
+        "cost_optimization": true,
+        "renewable_preference": true
+      }
+    },
+    "dc_charging": {
+      "architecture_specific": {
+        "precfd_400v": {
+          "max_current": 180,
+          "max_voltage": 450,
+          "max_power": 77000,
+          "preconditioning_support": true
+        },
+        "egmp_800v": {
+          "max_current": 350,
+          "max_voltage": 850,
+          "max_power": 350000,
+          "preconditioning_support": true,
+          "ultra_fast_capable": true
+        }
+      },
+      "charging_curves": {
+        "precfd_conservative": {
+          "curve_type": "hyundai_kia_precfd_optimized",
+          "temperature_compensation": true,
+          "soc_accuracy": 0.5,
+          "battery_health_adaptation": true,
+          "segments": [
+            {
+              "soc_start": 0,
+              "soc_end": 10,
+              "max_power": 45000,
+              "ramp_rate": 3000,
+              "conditions": ["battery_temp > 5C", "preconditioning_active"],
+              "thermal_monitoring": "intensive"
+            },
+            {
+              "soc_start": 10,
+              "soc_end": 45,
+              "max_power": 77000,
+              "ramp_rate": 5000,
+              "conditions": ["battery_temp_optimal", "cooling_active"],
+              "peak_power_sustained": true
+            },
+            {
+              "soc_start": 45,
+              "soc_end": 70,
+              "max_power": 62000,
+              "ramp_rate": 3000,
+              "conditions": ["thermal_management_active"],
+              "efficiency_priority": true
+            },
+            {
+              "soc_start": 70,
+              "soc_end": 80,
+              "max_power": 35000,
+              "ramp_rate": 2000,
+              "conditions": ["battery_protection_mode"],
+              "cell_balancing": "active"
+            },
+            {
+              "soc_start": 80,
+              "soc_end": 90,
+              "max_power": 18000,
+              "ramp_rate": 1200,
+              "conditions": ["gentle_charging"],
+              "longevity_priority": true
+            },
+            {
+              "soc_start": 90,
+              "soc_end": 95,
+              "max_power": 9000,
+              "ramp_rate": 800,
+              "conditions": ["precision_balancing"]
+            },
+            {
+              "soc_start": 95,
+              "soc_end": 100,
+              "max_power": 4000,
+              "ramp_rate": 400,
+              "conditions": ["completion_mode"]
+            }
+          ]
+        },
+        "egmp_ultra_fast": {
+          "curve_type": "hyundai_kia_egmp_800v_optimized",
+          "temperature_compensation": true,
+          "soc_accuracy": 0.1,
+          "battery_health_adaptation": true,
+          "voltage_optimization": true,
+          "segments": [
+            {
+              "soc_start": 0,
+              "soc_end": 10,
+              "max_power": 120000,
+              "ramp_rate": 8000,
+              "conditions": ["battery_temp > 15C", "800v_mode"],
+              "voltage_boost": true
+            },
+            {
+              "soc_start": 10,
+              "soc_end": 50,
+              "max_power": 240000,
+              "ramp_rate": 12000,
+              "conditions": ["optimal_thermal_state"],
+              "peak_performance": true
+            },
+            {
+              "soc_start": 50,
+              "soc_end": 70,
+              "max_power": 180000,
+              "ramp_rate": 6000,
+              "conditions": ["sustained_performance"],
+              "efficiency_optimization": true
+            },
+            {
+              "soc_start": 70,
+              "soc_end": 80,
+              "max_power": 100000,
+              "ramp_rate": 4000,
+              "conditions": ["battery_protection"],
+              "thermal_priority": true
+            },
+            {
+              "soc_start": 80,
+              "soc_end": 95,
+              "max_power": 50000,
+              "ramp_rate": 2000,
+              "conditions": ["longevity_mode"]
+            },
+            {
+              "soc_start": 95,
+              "soc_end": 100,
+              "max_power": 20000,
+              "ramp_rate": 1000,
+              "conditions": ["completion_precision"]
+            }
+          ]
+        }
+      },
+      "environmental_adaptation": {
+        "winter_performance": {
+          "battery_warming": true,
+          "preconditioning_aggressive": true,
+          "power_derating": {"threshold": -10, "factor": 0.75},
+          "heat_pump_coordination": true
+        },
+        "summer_protection": {
+          "thermal_derating": {"threshold": 35, "factor": 0.85},
+          "cooling_prioritization": true,
+          "charging_pause_threshold": 50
+        }
+      }
+    },
+    "bidirectional_charging": {
+      "v2l_capability": {
+        "egmp_models": true,
+        "max_power": 3600,
+        "voltage": [120, 240],
+        "camping_mode": true,
+        "emergency_power": true
+      },
+      "v2g_future": {
+        "hardware_capable": true,
+        "software_update_required": true,
+        "pilot_programs": ["korea", "europe"]
+      }
+    }
+  },
+  "safety_limits": {
+    "temperature": {
+      "battery_min_c": -30,
+      "battery_max_c": 55,
+      "derating_threshold_c": 42,
+      "emergency_stop_threshold_c": 60,
+      "optimal_range": [20, 35],
+      "active_thermal_management": {
+        "liquid_cooling": true,
+        "heat_pump_integration": true,
+        "predictive_conditioning": true,
+        "cabin_integration": true
+      },
+      "precfd_thermal_strategy": {
+        "conservative_approach": true,
+        "battery_protection_priority": true,
+        "thermal_runaway_prevention": "comprehensive",
+        "cell_level_monitoring": true
+      }
+    },
+    "voltage": {
+      "isolation_resistance_min": 500,
+      "insulation_monitoring": "continuous",
+      "architecture_specific": {
+        "precfd_400v": {
+          "nominal_voltage": 356,
+          "max_voltage": 450,
+          "min_voltage": 270,
+          "max_cell_voltage": 4.15
+        },
+        "egmp_800v": {
+          "nominal_voltage": 697,
+          "max_voltage": 850,
+          "min_voltage": 550,
+          "max_cell_voltage": 4.2
+        }
+      },
+      "high_voltage_safety": {
+        "automatic_disconnect": true,
+        "manual_service_disconnect": true,
+        "crash_disconnect": true,
+        "voltage_monitoring": "real_time"
+      }
+    },
+    "current": {
+      "overcurrent_protection": true,
+      "ground_fault_detection": true,
+      "dc_current_sensor_monitoring": true,
+      "arc_fault_detection": true,
+      "welding_detection": true,
+      "current_imbalance_detection": true
+    },
+    "mechanical": {
+      "connector_insertion_detection": true,
+      "lock_verification": true,
+      "cable_integrity_check": true,
+      "vibration_monitoring": true,
+      "impact_detection": true,
+      "water_ingress_protection": "IP67"
+    }
+  },
+  "vlink_ms_telemetry": {
+    "data_streams": {
+      "high_frequency": {
+        "interval_ms": 100,
+        "parameters": ["voltage", "current", "power", "frequency", "power_factor"],
+        "compression": "delta_compression",
+        "local_storage_duration": 300
+      },
+      "medium_frequency": {
+        "interval_ms": 1000,
+        "parameters": ["soc", "battery_temp_min", "battery_temp_max", "battery_temp_avg", "energy_delivered"],
+        "compression": "standard",
+        "local_storage_duration": 1800
+      },
+      "precfd_specific": {
+        "interval_ms": 2000,
+        "parameters": [
+          "charging_efficiency",
+          "cell_voltage_delta", 
+          "thermal_management_status",
+          "preconditioning_status",
+          "battery_conditioning_power",
+          "heat_pump_status",
+          "cooling_system_status",
+          "bms_health_score"
+        ],
+        "compression": "json_compact",
+        "local_storage_duration": 3600
+      },
+      "low_frequency": {
+        "interval_ms": 30000,
+        "parameters": ["cell_voltages", "cell_temperatures", "degradation_metrics", "cycle_count"],
+        "compression": "none",
+        "local_storage_duration": 86400
+      }
+    },
+    "analytics": {
+      "real_time_processing": true,
+      "ml_inference": {
+        "battery_degradation_prediction": true,
+        "thermal_optimization": true,
+        "charging_pattern_learning": true,
+        "preconditioning_optimization": true,
+        "model_version": "hyundai_kia_ml_v4.1.0"
+      },
+      "precfd_analytics": {
+        "charge_flow_optimization": true,
+        "battery_protection_scoring": true,
+        "thermal_efficiency_analysis": true,
+        "winter_performance_tracking": true
+      }
+    }
+  },
+  "error_handling": {
+    "fault_tolerance": {
+      "retry_attempts": 5,
+      "exponential_backoff": true,
+      "max_retry_interval": 300,
+      "circuit_breaker_threshold": 10,
+      "error_recovery_timeout": 60,
+      "precfd_safe_mode": true
+    },
+    "diagnostics": {
+      "self_test_on_connect": true,
+      "periodic_health_check": 1800,
+      "log_level": "info",
+      "remote_diagnostics_support": true,
+      "hyundai_kia_dtc_integration": {
+        "enabled": true,
+        "version": "hkmc_dtc_v4.1",
+        "gds_compatibility": true,
+        "precfd_specific_codes": true,
+        "egmp_specific_codes": true
+      }
+    }
+  },
+  "load_management": {
+    "dynamic_load_balancing": {
+      "enabled": true,
+      "algorithm": "hyundai_kia_smart_balancing",
+      "response_time_ms": 500,
+      "minimum_allocation_percent": 10,
+      "precfd_optimization": true
+    },
+    "demand_response": {
+      "dr_programs": ["peak_shaving", "load_shifting", "grid_stabilization"],
+      "response_time_seconds": 30,
+      "minimum_notice_minutes": 15,
+      "opt_out_capability": true
+    },
+    "priority_management": {
+      "base_priority": "normal",
+      "battery_protection_priority": "high",
+      "user_override": true,
+      "fleet_management": true
+    }
+  },
+  "manufacturer_specific": {
+    "hyundai_motor_group": {
+      "precfd_architecture": {
+        "philosophy": "Pre_Charge_Flow_Diagram_Optimization",
+        "thermal_first_approach": true,
+        "battery_longevity_focus": true,
+        "user_convenience_priority": true,
+        "efficiency_optimization": "balanced"
+      },
+      "battery_technology": {
+        "precfd_generation": {
+          "chemistry": "NCM622_NCM811",
+          "cell_format": "pouch_optimized",
+          "thermal_management": "liquid_cooling_integrated",
+          "cell_balancing": "active_continuous",
+          "safety_features": ["thermal_runaway_prevention", "overcharge_protection", "overcurrent_shutdown"],
+          "warranty": "8_years_unlimited_miles",
+          "degradation_target": "80_percent_soh_at_8_years"
+        },
+        "egmp_generation": {
+          "chemistry": "NCM811_enhanced",
+          "voltage_architecture": "800v_native",
+          "ultra_fast_charging": true,
+          "bidirectional_capable": true,
+          "advanced_bms": "predictive_analytics",
+          "thermal_integration": "heat_pump_coordinated",
+          "warranty": "10_years_unlimited_miles"
+        }
+      },
+      "charging_optimization_algorithms": {
+        "precfd_conservative": {
+          "battery_longevity_priority": true,
+          "thermal_protection_aggressive": true,
+          "charging_curve_adaptive": true,
+          "winter_performance_enhanced": true
+        },
+        "egmp_performance": {
+          "ultra_fast_capability": true,
+          "voltage_optimization": "800v_native",
+          "thermal_management_advanced": true,
+          "efficiency_maximized": true
+        }
+      }
+    }
+  },
+  "regional_compliance": {
+    "korea_home_market": {
+      "standards_compliance": {
+        "kc_certification": true,
+        "k_mark": true,
+        "korean_automotive_standards": ["KS_R_1001", "KS_C_8715"],
+        "ministry_approvals": ["MOLIT_Type_Approval", "Ministry_Trade"]
+      },
+      "charging_infrastructure": {
+        "ac_charging": {
+          "ac3_connector": true,
+          "single_phase_220v": {"max_power": 7000},
+          "three_phase_380v": {"max_power": 43000}
+        },
+        "dc_charging": {
+          "korean_dc_combo": true,
+          "chademo_legacy": true,
+          "max_power": 350000
+        }
+      },
+      "government_programs": {
+        "ev_subsidy": "up_to_8_million_won",
+        "charging_infrastructure": "k_new_deal",
+        "green_car_certification": true
+      }
+    },
+    "north_america": {
+      "standards_compliance": {
+        "federal_standards": ["EPA_Certified", "NHTSA_5_Star", "FCC_Part_15"],
+        "california_standards": ["CARB_ZEV", "SULEV30"],
+        "canada_standards": ["CMVSS", "ICES_003"]
+      },
+      "charging_infrastructure": {
+        "sae_j1772": true,
+        "ccs1_combo": true,
+        "tesla_adapter": "future_planned",
+        "nacs_transition": "under_evaluation"
+      },
+      "market_incentives": {
+        "federal_tax_credit": 7500,
+        "state_rebates": "varies_by_state",
+        "utility_programs": "time_of_use_rates"
+      }
+    },
+    "europe": {
+      "standards_compliance": {
+        "ce_marking": true,
+        "wltp_cycle": true,
+        "euro_ncap_5_star": true,
+        "eu_type_approval": true
+      },
+      "charging_infrastructure": {
+        "type2_connector": true,
+        "ccs2_combo": true,
+        "three_phase_400v": true
+      },
+      "environmental_compliance": {
+        "euro_6d": true,
+        "co2_fleet_targets": true,
+        "battery_passport": "ready"
+      }
+    },
+    "china": {
+      "standards_compliance": {
+        "gb_standards": true,
+        "3c_certification": true,
+        "catarc_testing": true
+      },
+      "charging_infrastructure": {
+        "gb_t_ac": true,
+        "gb_t_dc": true,
+        "chinese_wall_box": true
+      },
+      "local_requirements": {
+        "nev_credits": true,
+        "dual_credit_policy": true,
+        "data_localization": true
+      }
+    }
+  },
+  "compliance_and_certification": {
+    "global_automotive_standards": [
+      "ISO26262_Functional_Safety_ASIL_C",
+      "ISO21434_Cybersecurity",
+      "ISO15118_2_20_Charging",
+      "IEC61851_1_23_Safety",
+      "IEC62196_2_3_Connectors",
+      "SAE_J1772_J2847",
+      "UL2594_UL2089",
+      "UN_ECE_R10_R100"
+    ],
+    "hyundai_kia_quality": {
+      "global_quality_system": "HKMC_QS_v4.0",
+      "manufacturing_excellence": {
+        "zero_defect_philosophy": true,
+        "continuous_improvement": "kaizen_inspired",
+        "supplier_quality": "comprehensive_audit"
+      },
+      "customer_satisfaction": {
+        "jd_power_ratings": "consistently_high",
+        "warranty_comprehensive": "10_year_battery",
+        "service_network": "global_coverage"
+      }
+    },
+    "environmental_leadership": {
+      "carbon_neutrality": "2045_commitment",
+      "sustainable_manufacturing": true,
+      "battery_recycling": "95_percent_target",
+      "renewable_energy": "facility_transition"
+    }
+  },
+  "version_control": {
+    "semantic_versioning": true,
+    "release_channels": ["stable", "beta", "development"],
+    "current_channel": "stable",
+    "rollback_capability": true,
+    "update_mechanism": "secure_ota_validation",
+    "hyundai_kia_validation": {
+      "durability_testing": "arctic_to_desert",
+      "real_world_validation": "global_markets",
+      "customer_feedback_integration": true,
+      "continuous_improvement": "data_driven"
+    },
+    "compatibility_matrix": {
+      "vlink_ms_4.4.x": "fully_optimized",
+      "vlink_ms_4.3.x": "fully_compatible",
+      "vlink_ms_4.2.x": "compatible",
+      "bluelink_4.2": "native_integration",
+      "uvo_4.1": "native_integration",
+      "genesis_connected_3.0": "premium_integration"
+    },
+    "deployment_strategy": {
+      "global_rollout": {
+        "phase_1": "korea_home_market",
+        "phase_2": "north_america_europe", 
+        "phase_3": "china_india_asean",
+        "phase_4": "emerging_markets"
+      },
+      "quality_gates": {
+        "safety_validation": "comprehensive",
+        "performance_benchmarks": "exceeded",
+        "customer_satisfaction": "above_90_percent",
+        "regulatory_compliance": "all_markets"
+      },
+      "rollback_triggers": [
+        "safety_issue_detected",
+        "performance_degradation",
+        "customer_satisfaction_drop",
+        "regulatory_non_compliance"
+      ]
+    }
+  },
+  "future_roadmap": {
+    "next_generation_platforms": {
+      "egmp_evolution": {
+        "timeline": "2025_2026",
+        "improvements": ["500kW_charging", "solid_state_ready", "full_autonomy_support"],
+        "efficiency_gains": "15_percent_improvement"
+      },
+      "hydrogen_integration": {
+        "fuel_cell_ev": "nexo_successor",
+        "timeline": "2027_2028", 
+        "technology": "next_gen_fuel_cell"
+      }
+    },
+    "charging_technology": {
+      "wireless_charging": {
+        "timeline": "2026_pilot",
+        "power_level": "11kW_22kW",
+        "efficiency": "90_percent_target"
+      },
+      "ultra_fast_charging": {
+        "timeline": "2025",
+        "target_power": "500kW",
+        "charging_time": "under_10_minutes"
+      }
+    },
+    "sustainability_goals": {
+      "carbon_neutrality_2045": {
+        "manufacturing": "renewable_powered",
+        "supply_chain": "carbon_neutral",
+        "product_lifecycle": "net_zero"
+      },
+      "circular_economy": {
+        "battery_second_life": "energy_storage",
+        "material_recycling": "closed_loop",
+        "sustainable_design": "cradle_to_cradle"
+      }
+    }
+  }
+}
